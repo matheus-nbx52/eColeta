@@ -1,5 +1,6 @@
 import {Entity, PrimaryGeneratedColumn, Column, OneToMany, OneToOne, JoinColumn} from "typeorm";
 import { EnderecoModel } from "./EnderecoModel";
+import { ColetaModel } from "./ColetaModel";
 
 @Entity("morador")
 export class MoradorModel {
@@ -8,11 +9,13 @@ export class MoradorModel {
     id_morador!: number;
 
     @OneToOne(() => EnderecoModel)
-
     @JoinColumn({ name: 'fk_endereco'})
     endereco!: EnderecoModel;
-    //@OneToMany(() => EcoletorModel, (ecoletor) => ecoletor.morador)
-    //coletores!: EcoletorModel[];
+
+    //Antes o relacionamento estava ligado a EcoletorModel, mas isso não faz sentido
+    //pois um morador não se relaciona com o ecoletor e sim com a coleta.
+    @OneToMany(() => ColetaModel, (coleta) => coleta.morador)
+    coletas!: ColetaModel[];
 
     @Column({length: 100, nullable: false})
     nome!: string;
