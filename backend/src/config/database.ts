@@ -7,6 +7,7 @@ import { ResiduoModel } from '../models/ResiduoModel'
 import { CooperativaModel } from '../models/CooperativaModel'
 import { EcoletorModel } from '../models/EcoletorModel'
 import { ColetaModel } from '../models/ColetaModel'
+import { AvaliacaoModel } from '../models/AvaliacaoModel'
 
 
 dotenv.config({path: path.resolve(__dirname, '../../../.env') })
@@ -18,7 +19,7 @@ const AppDataSource = new DataSource ({
     username: process.env.DB_USER,
     password: process.env.DB_PASS,
     database: process.env.DB_NAME,
-    entities: [EnderecoModel, MoradorModel, ResiduoModel, CooperativaModel, EcoletorModel, ColetaModel], 
+    entities: [EnderecoModel, MoradorModel, ResiduoModel, CooperativaModel, EcoletorModel, ColetaModel, AvaliacaoModel], 
     synchronize: true,
     logging: false,
 })  
