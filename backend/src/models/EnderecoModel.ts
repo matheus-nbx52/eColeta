@@ -15,7 +15,7 @@ export class EnderecoModel {
     @Column({length: 10, nullable: false})
     numero!: string;
 
-    @Column({length: 100, nullable: false})
+    @Column({length: 100, nullable: true})
     complemento!: string;
 
     @Column({length: 100, nullable: false})
