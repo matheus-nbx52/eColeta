@@ -12,7 +12,7 @@ import { AvaliacaoModel } from '../models/AvaliacaoModel'
 
 dotenv.config({path: path.resolve(__dirname, '../../../.env') })
 
-const AppDataSource = new DataSource ({
+export const AppDataSource = new DataSource ({
     type: process.env.DB_TYPE as any,
     host: process.env.DB_HOST,
     port: Number(process.env.DB_PORT),
