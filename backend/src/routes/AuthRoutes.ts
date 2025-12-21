@@ -8,9 +8,8 @@ const authController = new AuthController(); // Instância do Controller
 // --- ROTAS DE ACESSO (Públicas) ---
 
 // [CREATE] Rota POST /api/v1/auth/register/morador (CADASTRO)
-router.post('/register/morador', authController.registerMorador);
-
+router.post('/register/morador', authController.registerMorador.bind(authController));
 // [CREATE] Rota POST /api/v1/auth/login (LOGIN)
-router.post('/login', authController.login); 
+router.post('/login', authController.login.bind(authController)); 
 
 export default router;
