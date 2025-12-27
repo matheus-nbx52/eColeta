@@ -16,7 +16,7 @@ export default function Barra_de_navegacao() {
                     <ul className="menu">
                         <li>Inicio</li>
                         <li>Sobre</li>
-                        <li>Como Funiona</li>
+                        <li>Como Funciona</li>
                         <li>Contato</li>
                     </ul>
 
