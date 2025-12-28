@@ -4,6 +4,7 @@ import '../../CSS/global.css'
 import Card_morador from '../../Components/Card-morador/card-morador'
 import Card_coletor from '../../Components/Card-coletor/card-coletor'
 import Card_cooperativa from '../../Components/Card-cooperativa/card-cooperativa'
+import Hero from '../../Components/Hero/hero'
 
 
 export default function Home() {
