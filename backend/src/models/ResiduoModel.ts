@@ -20,6 +20,9 @@ export class ResiduoModel {
              name: 'tipo_categoria'})
     tipo_categoria!: ResiduoCategoria;
 
+    @Column({type: 'int', nullable: false, default: '1'})
+    pontos_por_kg!: number;
+
     @Column({type: 'text', nullable: true})
     descricao!: string;
 

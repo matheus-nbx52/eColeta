@@ -2,10 +2,11 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToOne, OneToMany,
 import { MoradorModel } from "./MoradorModel";
 import { EcoletorModel } from "./EcoletorModel";
 import { AvaliacaoModel } from "./AvaliacaoModel";
-//import { TransacaoModel } from "./TransacaoModel";
-//import { ItensColetaModel } from "./ItensColetaModel";
+import { TransacaoModel } from "./TransacaoModel";
+import { ItensColetaModel } from "./ItensColetaModel";
+import { CooperativaModel } from "./CooperativaModel";
 
-export type StatusColeta = 'Pendente' | 'Aceito' | 'A Caminho' | 'Concluido' | 'Cancelado';
+export type StatusColeta = 'Pendente' | 'Aceito' | 'A Caminho' | 'Entregue_Coop' | 'Concluido' | 'Cancelado';
 
 @Entity("coleta")
 export class ColetaModel {
@@ -17,13 +18,17 @@ export class ColetaModel {
     @JoinColumn({ name: 'fk_morador' })
     morador!: MoradorModel;
 
+    @ManyToOne(()=> CooperativaModel)
+    @JoinColumn({ name: 'fk_cooperativa'})
+    cooperativa!: CooperativaModel;
+
     @ManyToOne(() => EcoletorModel, ecoletor => ecoletor.coletas_executadas, { nullable: true })
     @JoinColumn({ name: 'fk_ecoletor' })
     ecoletor!: EcoletorModel | null;
 
     @Column({
         type: 'enum', 
-        enum: ['Pendente', 'Aceito', 'A Caminho', 'Concluido', 'Cancelado'], 
+        enum: ['Pendente', 'Aceito', 'A Caminho', 'Entregue_Coop','Concluido', 'Cancelado'], 
         default: 'Pendente',
     })
     status_coleta!: StatusColeta;
@@ -37,15 +42,13 @@ export class ColetaModel {
     @Column({ length: 255, nullable: true})
     observacoes!: string;
 
-    //Relacionamentos - Comentados por enquanto
-
     @OneToOne(() => AvaliacaoModel, avaliacao => avaliacao.coleta)
     avaliacao!: AvaliacaoModel;
 
-    //@OneToOne(() => TransacaoModel, (transacao) => transacao.coleta)
-    //transacao!: TransacaoModel;
+    @OneToOne(() => TransacaoModel, (transacao) => transacao.coleta)
+    transacao!: TransacaoModel;
 
-    //@OneToMany(() => ItensColetaModel, (itensColeta) => itensColeta.coleta)
-    //itens_coleta!: ItensColetaModel[];
+    @OneToMany(() => ItensColetaModel, (ItensColeta) => ItensColeta.coleta)
+    ItensColeta!: ItensColetaModel[];
 
 }

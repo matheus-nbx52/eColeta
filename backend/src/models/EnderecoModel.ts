@@ -32,5 +32,10 @@ export class EnderecoModel {
 
     @Column({type: 'float', nullable: false, name: 'lon_endereco'})
     longitude!: number;
+
+
+   // @OneToOne(() => EnderecoModel, { cascade: true }) 
+    //@JoinColumn({ name: "id_endereco_fk" }) // Cria a coluna id_endereco_fk na tabela morador
+    //endereco: EnderecoModel;
 }
 

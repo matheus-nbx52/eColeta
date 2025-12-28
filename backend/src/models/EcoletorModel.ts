@@ -3,8 +3,6 @@ import { CooperativaModel } from "./CooperativaModel";
 import { ResiduoModel } from "./ResiduoModel";
 import { ColetaModel } from "./ColetaModel";
 
-export type StatusAprovacao = 'Pendente' | 'Aprovado' | 'Invativo';
-
 @Entity("ecoletor")
 export class EcoletorModel {
 
@@ -18,26 +16,23 @@ export class EcoletorModel {
     @Column({ length: 100, nullable: false })
     nome!: string;
 
-    @Column({ length: 14, unique: true, nullable: false })
-    cpf!: string;
+    @Column({ length: 100, nullable: false})
+    email!: string;
 
     @Column({ length: 255, nullable: false })
     senha!: string;
 
-    @Column({ type: 'float', default: 0.00, name: 'saldo_ecoletor'})
-    saldo_ecoletor!: number;
+    @Column({ length: 14, unique: true, nullable: false })
+    cpf!: string;
 
     @Column({ type: 'varchar', length: 50, nullable: false})
-    veiculo_tipo!: string;
+    veiculo_tipo!: string;  
 
     @Column({ type: 'boolean', default: false})
     disponivel!: boolean;
 
-    @Column({ type: 'enum', 
-              enum: ['Pendente', 'Aprovado', 'Inativo'], 
-              default: 'Pendente',
-              name: 'status_aprovacao'})
-    status_aprovacao!: StatusAprovacao;
+    @Column({ type: 'float', default: 0.00, name: 'saldo_ecoletor'})
+    saldo_ecoletor!: number;
 
     @Column({ type: 'float', nullable:true, name: 'latitude'})
     latitude!: number;
