@@ -41,6 +41,10 @@
 }
 
 .btn-morador {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
     padding: 1rem;
     border-radius: 15rem;
     background: linear-gradient(to right, #024D21, #04B34D);
