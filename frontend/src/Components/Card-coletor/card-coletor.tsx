@@ -1,5 +1,6 @@
 import '../Card-coletor/card-coletor.css'
 import Coletor from '../../assets/Logo-coletor/coletor.png'
+import { Link } from 'react-router-dom'
 
 export default function Card_coletor() {
     return (
@@ -13,10 +14,9 @@ export default function Card_coletor() {
                 <p>Aceite corridas de coletas e leve os
                     recicláveis para cooperativas parceiras.</p>
 
-                <button className='btn-coletor'>
-                    Cadastar
-
-                </button>
+               <Link to="/cadastro-coletor" className="btn-coletor">
+                Cadastrar
+               </Link>
 
 
             </div>

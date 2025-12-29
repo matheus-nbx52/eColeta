@@ -1,4 +1,3 @@
-
 .card-coletor-container {
     background-color: white;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
@@ -11,7 +10,7 @@
     flex-direction: column;
     overflow: hidden;
     gap: 1rem;
-    
+
 
 }
 
@@ -40,6 +39,10 @@
 }
 
 .btn-coletor {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
     padding: 1rem;
     border-radius: 15rem;
     background: linear-gradient(to right, #024D21, #04B34D);
