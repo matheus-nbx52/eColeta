@@ -10,10 +10,10 @@ body {
     background-color: #EAF4F0;
 }
 
-/* No arquivo onde você monta a página (ex: App.css ou Home.css) */
+
 .home-container {
     display: flex;
-    flex-direction: column; /* Isso joga os cards para baixo da imagem */
+    flex-direction: column;
     width: 100%;
 }
 
