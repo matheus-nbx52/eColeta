@@ -5,6 +5,7 @@ import Card_morador from '../../Components/Card-morador/card-morador'
 import Card_coletor from '../../Components/Card-coletor/card-coletor'
 import Card_cooperativa from '../../Components/Card-cooperativa/card-cooperativa'
 import Hero from '../../Components/Hero/hero'
+import Como_funciona from '../../Components/Como-funciona/como-funciona'
 
 export default function Home() {
     return (
@@ -24,10 +25,10 @@ export default function Home() {
 
                 </section>
 
-               {/* <section className='Como-funciona-container'>
+               <section className='Como-funciona-container'>
                     <Como_funciona/>
 
-                </section>*/}
+                </section>
             </div>
         </>
     )

@@ -1,33 +1,61 @@
-/*.como-funciona {
+.como-funciona {
     width: 100%;
     padding: 60px 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    display: flex;
-    justify-content: center;
+    background-color: #f9fbf9;
 }
 
 .como-funciona h2 {
     font-size: 32px;
     color: #0a5c2f;
     margin-bottom: 40px;
+    text-align: center;
+}
 
+
+.como-funciona div:has(img) {
+    width: 100%;
+    max-width: 1100px;
+    display: flex;
+    justify-content: center;
 }
 
 .como-funciona img {
     width: 100%;
-    max-width: 1000px;
     height: auto;
-    max-width: 1100px;
     border-radius: 0.5rem;
-
 }
+
 
 .descricao {
     display: flex;
-    gap: 6rem;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 1100px; 
+    margin-top: 20px;
     color: #0a5c2f;
+}
+
+.descricao p {
+    flex: 1; 
     text-align: center;
+    padding: 0 15px;
+    font-size: 1rem;
+    line-height: 1.4;
+    font-weight: 500;
+}
+
+
+@media (max-width: 768px) {
+    .descricao {
+        flex-direction: column;
+        gap: 20px;
+    }
     
-}*/
+    .descricao p {
+        padding: 0;
+    }
+}
