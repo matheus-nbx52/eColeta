@@ -16,7 +16,7 @@ export default function Footer() {
                 <div className='coluna'>
                     <h3>Informações</h3>
                     <hr />
-                    <ul className='lista-horizontal'>
+                    <ul className='lista-info'>
                         <li>Perguntas Frequentes</li>
                         <li>Política de Privacidade</li>
                     </ul>
@@ -24,7 +24,7 @@ export default function Footer() {
             </div>
 
             <div className='footer-bottom'>
-                <p>© 2026 eColeta Todos os direitos reservados - Termos de Uso</p>
+                <p>&copy; 2026 eColeta Todos os direitos reservados - Termos de Uso</p>
             </div>
         </footer>
     )
