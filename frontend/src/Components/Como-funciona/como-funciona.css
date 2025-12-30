@@ -4,7 +4,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    background-color: #f9fbf9;
+    background-color: #F0FDF4;
+   
 }
 
 .como-funciona h2 {
@@ -15,47 +16,72 @@
 }
 
 
-.como-funciona div:has(img) {
+.passos-wrapper,
+.descricao {
     width: 100%;
     max-width: 1100px;
     display: flex;
+    justify-content: space-between;
+}
+
+.passos-wrapper {
+    margin-bottom: 20px;
+}
+
+.passo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
     justify-content: center;
+}
+
+.numero {
+    background-color: #2D6A4F;
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+}
+
+.titulo-passo {
+    font-size: 1.2rem;
+    color: #1A4731;
+    font-weight: 700;
 }
 
 .como-funciona img {
     width: 100%;
+    max-width: 1100px;
     height: auto;
-    border-radius: 0.5rem;
+    display: block;
+    margin: 0 auto;
+    border-radius: 1rem;
 }
 
-
 .descricao {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    width: 100%;
-    max-width: 1100px; 
     margin-top: 20px;
     color: #0a5c2f;
 }
 
 .descricao p {
-    flex: 1; 
+    flex: 1;
     text-align: center;
-    padding: 0 15px;
+    padding: 0 10px;
     font-size: 1rem;
-    line-height: 1.4;
-    font-weight: 500;
+    line-height: 1.2;
 }
 
-
 @media (max-width: 768px) {
+
+    .passos-wrapper,
     .descricao {
         flex-direction: column;
+        align-items: center;
         gap: 20px;
-    }
-    
-    .descricao p {
-        padding: 0;
     }
 }

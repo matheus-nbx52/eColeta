@@ -10,9 +10,11 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 5rem;
-    border: 1px solid green;
-
+    flex-direction: row;
+    gap: 3rem;
+    width: 100%;
+    margin-top: 5rem;   
+    margin-bottom: 5rem;
 }
 
 .como-funciona-container {
@@ -20,13 +22,16 @@
     justify-content: center;
     align-items: center;
 
+
 }
 
 .home-container .como-funciona-container {
     display: flex;
     justify-content: center;
     align-items: center;
+
 }
+
 
 .footer-principal {
     width: 100%;
@@ -34,3 +39,4 @@
     display: flex;
     flex-direction: column;
 }
+
