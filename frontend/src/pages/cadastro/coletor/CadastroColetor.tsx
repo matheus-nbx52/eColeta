@@ -36,22 +36,26 @@ function CadastroColetor() {
 
         if (!nome || !cpf || !email || !telefone) {
             setErroDados('Preencha todos os dados pessoais');
+            return;
 
         }
 
         if (!cep || !rua || !numero || !bairro || !cidade) {
             setErroEndereco('Preencha o endereço completo');
+            return;
 
         }
 
 
         if (!veiculo || !cnh || !placa || !carga) {
             setErroVeiculo('Preencha os dados do veículo');
+            return;
         }
 
 
         if (!senha || senha !== confirmarSenha) {
             setErroSenha('As senhas não conferem');
+            return;
 
         }
 

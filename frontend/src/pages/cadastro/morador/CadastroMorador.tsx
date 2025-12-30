@@ -30,16 +30,18 @@ function CadastroMorador() {
 
         if (!nome || !cpf || !email || !telefone) {
             setErroDados('Preencha todos os dados pessoais');
-
+            return;
         }
 
         if (!cep || !rua || !numero || !bairro || !cidade) {
             setErroEndereco('Preencha o endereço completo');
+            return;
 
         }
 
         if (!senha || senha !== confirmarSenha) {
             setErroSenha('As senhas não conferem');
+            return;
 
         }
 
