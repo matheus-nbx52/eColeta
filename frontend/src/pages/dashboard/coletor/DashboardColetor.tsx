@@ -1,9 +1,14 @@
 import CardResumo from "../../../Components/dashboard-coletor/card-resumo/CardResumo"
 import "./DashboardColetor.css"
+import NavbarColetor from "../../../Components/dashboard-coletor/navbar/NavbarColetor";
 
 function DashboardColetor() {
   return (
+    <>
+    <NavbarColetor/>
+
     <main className="dashboard-page"> 
+      
       <div className="dashboard-container">
 
         <div className="dashboard-cards">
@@ -30,6 +35,7 @@ function DashboardColetor() {
         </div>
       </div>
     </main>
+    </>
   );
 }
 
