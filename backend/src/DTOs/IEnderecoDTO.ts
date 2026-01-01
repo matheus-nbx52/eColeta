@@ -1,6 +1,6 @@
 export interface IEnderecoDTO {
     cep: string;
-    logradouro: string;
+    rua: string;
     numero: string;
     complemento?: string | null;
     bairro: string;
