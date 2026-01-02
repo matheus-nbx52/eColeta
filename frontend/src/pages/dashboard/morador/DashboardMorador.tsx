@@ -4,25 +4,20 @@ import DashboardContentMorador from '../../../Components/dashboardContent/Dashbo
 import HistoricoMorador from '../../../Components/HistoricoMorador/HistoricoMorador';
 
 export default function DashboardMorador() {
-  const nomeDoUsuarioLogado = "Débora";
+ const nomeDoUsuarioLogado = "Débora";
 
     return (
         <div className="recipiente-dashboard-principal">
-           
             <NavbarMorador nome={nomeDoUsuarioLogado} />
             
-            <DashboardContentMorador />
+            <div className="conteudo-central">
+                <button type="button" className="btn-voltar" onClick={() => window.history.back()}>
+                    ← Voltar
+                </button>
+
+                <DashboardContentMorador />
+                <HistoricoMorador />
+            </div>
         </div>
     );
-}   
-  return (
-    <div className="recipiente-dashboard-principal">
-      <NavbarMorador nome={nomeDoUsuarioLogado} />
-      
-      <div className="conteudo-central">
-        <DashboardContentMorador /> 
-        <HistoricoMorador />
-      </div>
-    </div>
-  );
 }
