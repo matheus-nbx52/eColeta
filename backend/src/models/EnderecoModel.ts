@@ -10,13 +10,10 @@ export class EnderecoModel {
     cep!: string;
 
     @Column({length: 255, nullable: false})
-    logradouro!: string;
+    rua!: string;
 
     @Column({length: 10, nullable: false})
     numero!: string;
-
-    @Column({length: 100, nullable: true})
-    complemento!: string;
 
     @Column({length: 100, nullable: false})
     bairro!: string;
@@ -26,13 +23,6 @@ export class EnderecoModel {
 
     @Column({type: 'char', length: 2, nullable: false, default: 'PE'})
     estado!: string;
-
-    @Column({type: 'float', nullable: false, name:'lat_endereco'})
-    latitude!: number;
-
-    @Column({type: 'float', nullable: false, name: 'lon_endereco'})
-    longitude!: number;
-
 
    // @OneToOne(() => EnderecoModel, { cascade: true }) 
     //@JoinColumn({ name: "id_endereco_fk" }) // Cria a coluna id_endereco_fk na tabela morador
