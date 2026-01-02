@@ -1,0 +1,46 @@
+
+.coletas-container {
+  width: 100%;
+  margin-top: 40px;
+}
+
+.coletas-container h2 {
+  margin-bottom: 30px;
+  font-size: 1.5rem;
+  color: #14532D;
+  font-weight: bold;
+}
+
+.coleta-card {
+  width: 100%;
+  background: #fff;
+  padding: 20px 24px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  border: 1px solid #e2e8f0; /* Para combinar com os cards de cima */
+}
+
+/* Alinhamento das colunas internas */
+.coleta-card > div {
+  flex: 1; 
+  display: flex;
+  gap: 5px;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.btn-coleta {
+  background-color: #2e7d32;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  flex: 0 0 auto; 
+}
+

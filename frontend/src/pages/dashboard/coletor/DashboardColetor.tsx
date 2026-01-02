@@ -1,12 +1,13 @@
 import CardResumo from "../../../Components/dashboard-coletor/card-resumo/CardResumo"
 import "./DashboardColetor.css"
 import NavbarColetor from "../../../Components/dashboard-coletor/navbar/NavbarColetor";
+import ColetasDisponiveis from "../../../Components/dashboard-coletor/coletas-disponiveis/ColetasDisponiveis";
 
 function DashboardColetor() {
   return (
     <>
     <NavbarColetor/>
-
+    
     <main className="dashboard-page"> 
       
       <div className="dashboard-container">
@@ -33,8 +34,14 @@ function DashboardColetor() {
             colorClass="green"
           />
         </div>
+        <div className="dashboard-section-wrapper">
+          <ColetasDisponiveis/>
+        </div>
+        
       </div>
+      
     </main>
+   
     </>
   );
 }

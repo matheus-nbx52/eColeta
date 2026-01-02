@@ -6,6 +6,15 @@ import HistoricoMorador from '../../../Components/HistoricoMorador/HistoricoMora
 export default function DashboardMorador() {
   const nomeDoUsuarioLogado = "Débora";
 
+    return (
+        <div className="recipiente-dashboard-principal">
+           
+            <NavbarMorador nome={nomeDoUsuarioLogado} />
+            
+            <DashboardContentMorador />
+        </div>
+    );
+}   
   return (
     <div className="recipiente-dashboard-principal">
       <NavbarMorador nome={nomeDoUsuarioLogado} />
