@@ -7,7 +7,6 @@ type CardResumoColetorProps = {
   colorClass: string
 };
 
-
 function CardResumo({ titulo, valor, icon, colorClass }: CardResumoColetorProps) {
   return (
     <div className="card-resumo">
