@@ -6,7 +6,7 @@ export default function Card_cooperativa() {
     return (
         <>
             <div className='card-cooperativa-container'>
-                <h3>Cadastro da Cooperativa</h3>
+                <h3>Cadastro de Cooperativa</h3>
                 <div className='card-logo-cooperativa'>
                     <img src={Cooperativa} alt="" />
 

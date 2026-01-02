@@ -3,12 +3,15 @@ import { MoradorModel } from "../models/MoradorModel"
 import { EnderecoModel } from "../models/EnderecoModel";
 import bcrypt from 'bcryptjs';
 
+import { ICreateMoradorDTO } from "../DTOs/ICreateMoradorDTO";
+import { IUpdateMoradorDTO } from "../DTOs/IUpdateMoradorDTO";
+
 export class MoradorService {
     private moradorRepository = AppDataSource.getRepository(MoradorModel);
     private enderecoRepository = AppDataSource.getRepository(EnderecoModel);
 
     //Logica de CRIAÇÃO
-    async create(dados: any) {
+    async create(dados: ICreateMoradorDTO) {
         const { nome, email, senha, cpf, telefone, endereco } = dados;
 
         // Validação
@@ -29,7 +32,6 @@ export class MoradorService {
             // Criar e salvar o endereço primeiro
             const novoEndereco = queryRunner.manager.create(EnderecoModel, {
                 ...endereco,
-                complemento: endereco.complemento || null,
             });
             const enderecoSalvo = await queryRunner.manager.save(novoEndereco);
 
@@ -63,7 +65,7 @@ export class MoradorService {
         return morador;
     }
 
-    async update(id: number, dadosAtualizacao: { nome?: string; telefone?: string; }) {
+    async update(id: number, dadosAtualizacao: IUpdateMoradorDTO) {
         const result = await this.moradorRepository.update(id, dadosAtualizacao);
 
         if (result.affected === 0) {

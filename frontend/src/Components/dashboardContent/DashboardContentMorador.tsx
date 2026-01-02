@@ -1,11 +1,20 @@
 import { Clock, Box, CheckCircle, Trophy, Gift, Sparkles, Scale } from 'lucide-react';
+import './DashboardContentMorador.css';
+import { useState } from 'react';
+import ModalSolicitarColeta from '../modalSolicitarColeta/ModalSolicitarColeta';
 
 export default function DashboardContentMorador() {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
     return (
         <div className="conteudo-principal-recipiente">
             <div className="container-botao-topo">
-                <button className="botao-solicitar-coleta">
-                    <span>+</span> Solicitar Nova Coleta
+                <button 
+                    className="botao-solicitar-coleta" 
+                    onClick={() => setIsModalOpen(true)}
+                >
+                    <span className="icone-mais">+</span>
+                    Solicitar Nova Coleta
                 </button>
             </div>
 
@@ -85,6 +94,11 @@ export default function DashboardContentMorador() {
                     </div>
                 </div>
             </div>
+
+            <ModalSolicitarColeta 
+                isOpen={isModalOpen} 
+                onClose={() => setIsModalOpen(false)} 
+            />
         </div>
     );
 }
