@@ -13,7 +13,7 @@ function NavbarColetor() {
           <img src={logo} alt="logo eColeta" className="navbar-logo"/>
           <div>
             <h1>Olá, Carlos Santos!</h1>
-            <p>Dashboard do Coletor</p>
+            <p>Painel do Coletor</p>
           </div>
         </div>
 
