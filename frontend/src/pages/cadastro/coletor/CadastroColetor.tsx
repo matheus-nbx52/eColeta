@@ -1,9 +1,11 @@
-import "./CadastroColetor.css"
+import "./CadastroColetor.css";
 import { FaUser, FaIdCard, FaPhone, FaEnvelope, FaMapMarkerAlt, FaLock, FaCar } from "react-icons/fa";
-import { useState } from "react";
-
+import { useState, useEffect } from "react"; 
+import { useNavigate } from "react-router-dom"; 
 
 function CadastroColetor() {
+    const navigate = useNavigate();
+
     const [nome, setNome] = useState('');
     const [cpf, setCpf] = useState('');
     const [email, setEmail] = useState('');
@@ -18,12 +20,35 @@ function CadastroColetor() {
     const [cidade, setCidade] = useState('');
     const [veiculo, setVeiculo] = useState('');
     const [cnh, setCnh] = useState('');
+
     const [erroDados, setErroDados] = useState('');
     const [erroEndereco, setErroEndereco] = useState('');
     const [erroSenha, setErroSenha] = useState('');
-    const [erroVeiculo, setErroVeiculo] = useState('')
+    const [erroVeiculo, setErroVeiculo] = useState('');
+    const [carregando, setCarregando] = useState(false); 
 
-    const handleSubmit = (event: React.FormEvent) => {
+   
+    useEffect(() => {
+        const cepLimpo = cep.replace(/\D/g, ''); 
+        if (cepLimpo.length === 8) {
+            fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`)
+                .then((res) => res.json())
+                .then((dados) => {
+                    if (!dados.erro) {
+                        setRua(dados.logradouro);
+                        setBairro(dados.bairro);
+                        setCidade(dados.localidade);
+                        setErroEndereco(''); 
+                    } else {
+                        setErroEndereco('CEP não encontrado.');
+                    }
+                })
+                .catch(() => setErroEndereco('Erro ao buscar servidor de CEP.'));
+        }
+    }, [cep]); 
+
+    
+    const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
 
         setErroDados('');
@@ -31,173 +56,115 @@ function CadastroColetor() {
         setErroVeiculo('');
         setErroSenha('');
 
+        // Validações
+        if (!nome || !cpf || !email || !telefone) return setErroDados('Preencha todos os dados pessoais');
+        if (!cep || !rua || !numero || !bairro || !cidade) return setErroEndereco('Preencha o endereço completo');
+        if (!veiculo || !cnh) return setErroVeiculo('Preencha os dados do veículo');
+        if (!senha || senha !== confirmarSenha) return setErroSenha('As senhas não conferem');
 
-        if (!nome || !cpf || !email || !telefone) {
-            setErroDados('Preencha todos os dados pessoais');
-            return;
-
-        }
-
-        if (!cep || !rua || !numero || !bairro || !cidade) {
-            setErroEndereco('Preencha o endereço completo');
-            return;
-
-        }
-
-
-        if (!veiculo || !cnh) {
-            setErroVeiculo('Preencha os dados do veículo');
-            return;
-        }
-
-
-        if (!senha || senha !== confirmarSenha) {
-            setErroSenha('As senhas não conferem');
-            return;
-
-        }
-
+       
         const coletor = {
             nome,
             cpf,
             email,
             telefone,
-            endereco: {
-                cep,
-                rua,
-                numero,
-                complemento,
-                bairro,
-                cidade,
-            },
+            endereco:
+             { cep, rua, numero, complemento, bairro, cidade },
             senha,
-            veiculo: {
-                veiculo,
-                cnh,
-            }
+            veiculo: { veiculo, cnh }
         };
 
-        console.log("Cadastro Válido:", coletor);
+        try {
+            setCarregando(true);
+
+           
+            console.log("Enviando dados para o servidor...", coletor);
+        
+            
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            alert("Cadastro realizado com sucesso!");
+            navigate("/dashboard-coletor"); 
+
+        } catch (error) {
+            setErroDados("Erro ao conectar com o servidor. Tente novamente.");
+        } finally {
+            setCarregando(false); 
+        }
     };
-
-
 
     return (
         <div className="cadastro-page">
             <div className="cadastro-card">
-
                 <h2>Cadastro de coletor</h2>
                 <p className="subtitle">Preencha seus dados para aceitar coletas</p>
+                
                 {erroDados && <p className="erro">{erroDados}</p>}
+                
                 <form className="cadastro-form" onSubmit={handleSubmit}>
                     <div className="section">
-                        <label className="label-icon">
-                            <FaUser />
-                            Nome Completo
-                        </label>
-                        <input type="text"
-                            value={nome}
-                            onChange={(e) => setNome(e.target.value)}
-                        />
+                        <label className="label-icon"><FaUser /> Nome Completo</label>
+                        <input type="text" value={nome} onChange={(e) => setNome(e.target.value)} />
                     </div>
+
                     <div className="row">
                         <div className="section">
-                            <label className="label-icon">
-                                <FaIdCard />
-                                CPF
-                            </label>
-                            <input type="text"
-                                value={cpf}
-                                onChange={(e) => setCpf(e.target.value)}
-                            />
+                            <label className="label-icon"><FaIdCard /> CPF</label>
+                            <input type="text" value={cpf} onChange={(e) => setCpf(e.target.value)} />
                         </div>
-
                         <div className="section">
-                            <label className="label-icon">
-                                <FaPhone />
-                                Telefone
-                            </label>
-                            <input type="tel" placeholder="(00) 00000-0000"
-                                value={telefone}
-                                onChange={(e) => setTelefone(e.target.value)}
-                            />
+                            <label className="label-icon"><FaPhone /> Telefone</label>
+                            <input type="tel" placeholder="(00) 00000-0000" value={telefone} onChange={(e) => setTelefone(e.target.value)} />
                         </div>
                     </div>
+
                     <div className="section">
-                        <label className="label-icon">
-                            <FaEnvelope />
-                            Email
-                        </label>
-                        <input type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                        />
+                        <label className="label-icon"><FaEnvelope /> Email</label>
+                        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
                     </div>
-                    <h3 className="section-title">
-                        <FaMapMarkerAlt />
-                        Endereço
-                    </h3>
+
+                    <h3 className="section-title"><FaMapMarkerAlt /> Endereço</h3>
                     {erroEndereco && <p className="erro">{erroEndereco}</p>}
                     <div className="row">
                         <div className="section">
                             <label>CEP</label>
-                            <input type="text" placeholder="00000-000"
-                                value={cep}
-                                onChange={(e) => setCep(e.target.value)}
-                            />
+                            <input type="text" placeholder="00000-000" value={cep} onChange={(e) => setCep(e.target.value)} />
                         </div>
                         <div className="section">
                             <label>Rua/Avenida</label>
-                            <input type="text"
-                                value={rua}
-                                onChange={(e) => setRua(e.target.value)}
-                            />
+                            <input type="text" value={rua} onChange={(e) => setRua(e.target.value)} />
                         </div>
-
                     </div>
+
                     <div className="row">
                         <div className="section">
                             <label>Número</label>
-                            <input type="text"
-                                value={numero}
-                                onChange={(e) => setNumero(e.target.value)}
-                            />
+                            <input type="text" value={numero} onChange={(e) => setNumero(e.target.value)} />
                         </div>
                         <div className="section">
                             <label>Complemento</label>
-                            <input type="text" placeholder="apto, bloco, etc."
-                                value={complemento}
-                                onChange={(e) => setComplemento(e.target.value)}
-                            />
+                            <input type="text" placeholder="apto, bloco, etc." value={complemento} onChange={(e) => setComplemento(e.target.value)} />
                         </div>
                     </div>
+
                     <div className="row">
                         <div className="section">
                             <label>Bairro</label>
-                            <input type="text"
-                                value={bairro}
-                                onChange={(e) => setBairro(e.target.value)}
-                            />
+                            <input type="text" value={bairro} onChange={(e) => setBairro(e.target.value)} />
                         </div>
                         <div className="section">
                             <label>Cidade</label>
-                            <input type="text"
-                                value={cidade}
-                                onChange={(e) => setCidade(e.target.value)}
-                            />
+                            <input type="text" value={cidade} onChange={(e) => setCidade(e.target.value)} />
                         </div>
                     </div>
-                    <h3 className="section-title">
-                        <FaCar />
-                        Veículo
-                    </h3>
+
+                    <h3 className="section-title"><FaCar /> Veículo</h3>
                     {erroVeiculo && <p className="erro">{erroVeiculo}</p>}
                     <div className="row">
                         <div className="section">
                             <label>Tipo de veículo</label>
-                            <select value={veiculo}
-                                onChange={(e) => setVeiculo(e.target.value)}>
-                                <option value="">Selecione o tipo de veículo</option>
+                            <select value={veiculo} onChange={(e) => setVeiculo(e.target.value)}>
+                                <option value="">Selecione o tipo</option>
                                 <option value="moto">Moto</option>
                                 <option value="carro">Carro</option>
                                 <option value="caminhão">Caminhão</option>
@@ -206,39 +173,30 @@ function CadastroColetor() {
                         </div>
                         <div className="section">
                             <label>CNH</label>
-                            <input type="text"
-                                value={cnh}
-                                onChange={(e) => setCnh(e.target.value)}
-                            />
+                            <input type="text" value={cnh} onChange={(e) => setCnh(e.target.value)} />
                         </div>
                     </div>
-                    <h3 className="section-title">
-                        <FaLock />
-                        Senha
-                    </h3>
+
+                    <h3 className="section-title"><FaLock /> Senha</h3>
                     {erroSenha && <p className="erro">{erroSenha}</p>}
                     <div className="row">
                         <div className="section">
                             <label>Senha</label>
-                            <input type="password"
-                                value={senha}
-                                onChange={(e) => setSenha(e.target.value)}
-                            />
+                            <input type="password" value={senha} onChange={(e) => setSenha(e.target.value)} />
                         </div>
                         <div className="section">
                             <label>Confirmar senha</label>
-                            <input type="password"
-                                value={confirmarSenha}
-                                onChange={(e) => setConfirmarSenha(e.target.value)}
-                            />
+                            <input type="password" value={confirmarSenha} onChange={(e) => setConfirmarSenha(e.target.value)} />
                         </div>
                     </div>
-                    <button className="btn-criar">Criar Conta</button>
+
+                    <button className="btn-criar" disabled={carregando}>
+                        {carregando ? "Cadastrando..." : "Criar Conta"}
+                    </button>
                 </form>
             </div>
-
         </div>
-    )
+    );
 }
 
-export default CadastroColetor
+export default CadastroColetor;
