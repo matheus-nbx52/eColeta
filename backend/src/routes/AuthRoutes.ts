@@ -17,4 +17,7 @@ router.post('/login', authController.loginMorador.bind(authController));
 router.post("/register/cooperativa", authController.registerCooperativa.bind(authController));
 router.post("/login/cooperativa", authController.loginCooperativa.bind(authController));
 
+router.post("/register/ecoletor", authController.registerEcoletor.bind(authController));
+router.post("/login/ecoletor", authController.loginEcoletor.bind(authController));
+
 export default router;

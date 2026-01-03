@@ -80,5 +80,43 @@ export class AuthService {
             }
         }
     }
-    
+    // Autenticação com token ecoletor
+    async loginEcoletor(email: string, senhaDigitada: string) {
+        const repo = AppDataSource.getRepository(EcoletorModel);
+        const user = await repo.findOne({ 
+            where: { email },
+            select: ['id_ecoletor', 'nome', 'email', 'senha', 'cpf', 'telefone', 'veiculo_tipo'],
+            relations: ['cooperativa']
+        });
+
+        if (!user) {
+            throw new Error("Email ou senha inválidos.");
+        }
+
+        const senhaValida = await bcrypt.compare(senhaDigitada, user.senha);
+
+        if (!senhaValida) {
+            throw new Error("Email ou senha inválidos.");
+        }
+
+        // remove senha da coop vinculada
+        if (user.cooperativa) {
+            delete (user.cooperativa as any).senha;
+        }
+
+        const token = this.generateToken({
+            id: user.id_ecoletor,
+            tipo: 'ecoletor'
+        });
+
+        const { senha, ...userSemSenha } = user;
+
+        return { 
+            token, 
+            user: { 
+                ...userSemSenha, 
+                tipo: "ecoletor" 
+            }
+        };
+    }
 }
