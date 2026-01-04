@@ -11,13 +11,17 @@ export class EcoletorService {
     async create(dados: ICreateEcoletorDTO) {
         const { nome, email, senha, cpf, telefone, veiculo_tipo, id_cooperativa } = dados;
 
-        // validação da cooperativa (obrigatório para criar o vínculo com ecoletor)
-        const cooperativaEncontrada = await this.cooperativaRepository.findOneBy({ 
-            id_cooperativa: id_cooperativa 
-        });
+        let cooperativaEncontrada: CooperativaModel | undefined = undefined;
+        
+        if (id_cooperativa) {
+            const busca = await this.cooperativaRepository.findOneBy({ 
+                id_cooperativa: id_cooperativa 
+            });
 
-        if (!cooperativaEncontrada) {
-            throw new Error("Cooperativa não encontrada.");
+        if (!busca) {
+            throw new Error("Cooperativa informada não encontrada.");
+        }
+            cooperativaEncontrada = busca;
         }
         
         const ecoletorExists = await this.ecoletorRepository.findOne({
@@ -54,7 +58,7 @@ export class EcoletorService {
             const ecoletorSalvo = await queryRunner.manager.save(EcoletorModel, novoEcoletor);
             await queryRunner.commitTransaction();
 
-            // limpeza de segurança da senha da coop
+            // limpeza de segurança da senha da coop (se houver vinculo)
             if (ecoletorSalvo.cooperativa) {
             delete (ecoletorSalvo.cooperativa as any).senha;
             }

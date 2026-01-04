@@ -104,9 +104,9 @@ export class AuthController {
         const dados: ICreateEcoletorDTO = req.body;
         const { email, senha, cpf, id_cooperativa } = dados;
         
-        if (!email || !senha || !cpf || !id_cooperativa) {
+        if (!email || !senha || !cpf) {
             return res.status(400).json({ 
-                message: "Email, senha, CPF e ID da Cooperativa são obrigatórios." 
+                message: "Email, senha, CPF são obrigatórios." 
             });
         }
 

@@ -5,5 +5,5 @@ export interface ICreateEcoletorDTO {
     cpf: string;
     telefone: string;
     veiculo_tipo: string;
-    id_cooperativa: number;
+    id_cooperativa?: number;
 }
