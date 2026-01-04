@@ -11,7 +11,7 @@
 
 .titulo-secao {
     color: #095d3e;
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     margin-top: 0;
     margin-bottom: 40px;
     font-weight: 400;
@@ -26,11 +26,11 @@
 }
 
 .conteudo-vazio h4 {
-    color: #095d3e;
+    color: #09845b;
 }
 
 .conteudo-vazio p {
-    color: #095d3e;
+    color: #0c9f6e;
 }
 
 .circulo-icone {

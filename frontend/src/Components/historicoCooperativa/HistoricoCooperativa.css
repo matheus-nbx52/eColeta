@@ -1,0 +1,93 @@
+.quadro-historico-coop {
+    background-color: #ffffff;
+    border-radius: 25px; 
+    padding: 30px;
+    margin-top: 25px;
+    min-height: 350px;
+    border: 1px solid #f1f5f9; 
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+    display: flex;
+    flex-direction: column;
+}
+
+.cabecalho-historico {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px; 
+}
+
+.titulo-historico {
+    color: #064e3b;
+    font-size: 1.2rem;
+    font-weight: 400;
+    margin: 0;
+}
+
+.area-filtros {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.icone-filtro-verde {
+    color: #10b981; 
+}
+
+.seletor-estilizado {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center; 
+    background-size: 16px;
+
+    padding: 10px 40px 10px 15px; 
+    border-radius: 12px; 
+    border: 1.5px solid #10b981; 
+    background-color: #f8fafc;
+    color: #475569;
+    font-weight: 500;
+    font-size: 0.9rem;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: fit-content;
+    min-width: 160px; 
+}
+
+.seletor-estilizado:hover {
+    background-color: #ffffff;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
+}
+
+.conteudo-vazio-historico {
+    flex: 1; 
+    display: flex;
+    flex-direction: column;
+    align-items: center;      
+    justify-content: center;  
+    padding-bottom: 40px;      
+}
+
+.circulo-central-vazio {
+    width: 85px;
+    height: 85px;
+    background-color: #f0fdf4;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #0c9f6e;
+    margin-bottom: 20px;
+    border: 2px solid #dcfce7;
+}
+
+.texto-vazio  {
+    color: #0c9f6e;
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin: 0;
+    text-align: center;
+}

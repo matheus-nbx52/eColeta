@@ -1,0 +1,52 @@
+.secao-materiais-laranja {
+    background-color: #ff8000;
+    padding: 30px 40px;
+    border-radius: 25px;
+    margin-top: 20px;
+}
+
+.titulo-materiais {
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-bottom: 25px;
+}
+
+.grade-cards-materiais {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.cartao-material-item {
+    background-color: rgba(255, 255, 255, 0.15);
+    width: 150px;
+    height: 150px;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.circulo-branco-icone {
+    background-color: white;
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icone-laranja {
+    color: #ff8000; 
+    display: flex;
+}
+
+.texto-material {
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 500;
+}

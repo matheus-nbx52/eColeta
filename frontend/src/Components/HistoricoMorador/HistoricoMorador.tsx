@@ -8,7 +8,7 @@ const HistoricoMorador = () => {
       
       <div className="conteudo-vazio">
         <div className="circulo-icone">
-          <Box size={40} color="#09625bff" />
+          <Box size={40} color="#0c9f6e" />
         </div>
         <h4>Nenhuma coleta solicitada ainda</h4>
         <p>Clique em "Solicitar Nova Coleta" para começar</p>
