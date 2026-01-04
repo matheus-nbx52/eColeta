@@ -1,74 +1,118 @@
+import { useState } from 'react';
 import './ModalSolicitarColeta.css';
-import { X, FileText, CupSoda, Trash2, GlassWater, Smartphone, Droplets } from 'lucide-react';
+
+interface Coleta {
+    id: string;
+    material: string;
+    quantidade: string;
+    status: 'Pendente' | 'Em Coleta' | 'Coletado';
+    data: string;
+    peso: number;
+}
+
+interface Usuario {
+    id: string;
+    historico: Coleta[];
+}
 
 interface ModalProps {
     isOpen: boolean;
     onClose: () => void;
 }
 
-const ModalSolicitarColeta = ({ isOpen, onClose }: ModalProps) => {
+export default function ModalSolicitarColeta({ isOpen, onClose }: ModalProps) {
+    const [material, setMaterial] = useState('');
+    const [quantidade, setQuantidade] = useState('');
+
     if (!isOpen) return null;
 
-    const materiais = [
-        { nome: 'Papel/Papelão', icone: <FileText size={20} color="#9333ea" /> },
-        { nome: 'Plástico', icone: <CupSoda size={20} color="#db2777" /> },
-        { nome: 'Metal/Latas', icone: <Trash2 size={20} color="#ea580c" /> },
-        { nome: 'Vidro', icone: <GlassWater size={20} color="#ca8a04" /> },
-        { nome: 'Eletrônicos', icone: <Smartphone size={20} color="#4f46e5" /> },
-        { nome: 'Óleo de Cozinha', icone: <Droplets size={20} color="#2563eb" /> },
-    ];
+    const handleSalvarSolicitacao = () => {
+        if (!material || !quantidade) {
+            alert("Por favor, preencha todos os campos.");
+            return;
+        }
+
+        const idLogado = localStorage.getItem('usuarioLogadoId');
+        const usuariosRaw = localStorage.getItem('usuarios');
+
+        if (idLogado && usuariosRaw) {
+           
+            const usuarios: Usuario[] = JSON.parse(usuariosRaw);
+            
+            const novaColeta: Coleta = {
+                id: Date.now().toString(),
+                material: material,
+                quantidade: quantidade,
+                status: 'Pendente',
+                data: new Date().toLocaleDateString('pt-BR'),
+                peso: 0
+            };
+
+            const usuariosAtualizados = usuarios.map((user: Usuario) => {
+                if (user.id === idLogado) {
+                    return {
+                        ...user,
+                        historico: [...(user.historico || []), novaColeta]
+                    };
+                }
+                return user;
+            });
+
+            localStorage.setItem('usuarios', JSON.stringify(usuariosAtualizados));
+            
+    
+            setMaterial('');
+            setQuantidade('');
+            
+            alert("Solicitação enviada com sucesso!");
+            onClose(); 
+        } else {
+            alert("Erro: Usuário não encontrado. Tente fazer login novamente.");
+        }
+    };
 
     return (
         <div className="modal-overlay">
-            <div className="modal-container">
+            <div className="modal-conteudo">
                 <div className="modal-header">
-                    <h2>Solicitar Coleta</h2>
-                    <button className="botao-fechar" onClick={onClose}><X size={24} /></button>
+                    <h2>Nova Solicitação de Coleta</h2>
+                    <button className="fechar-x" onClick={onClose}>&times;</button>
                 </div>
 
                 <div className="modal-body">
                     <div className="campo-grupo">
-                        <label>Endereço da Coleta</label>
-                        <input type="text" placeholder="Rua das Flores, 123" />
-                    </div>
-
-                    <div className="campo-grupo">
-                        <label>Tipos de Material</label>
-                        <div className="grade-materiais">
-                            {materiais.map((item, index) => (
-                                <div key={index} className="item-material">
-                                    <input type="checkbox" id={`mat-${index}`} />
-                                    <label htmlFor={`mat-${index}`}>
-                                        {item.icone}
-                                        <span>{item.nome}</span>
-                                    </label>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="campo-grupo">
-                        <label>Peso Estimado (kg)</label>
-                        <input type="text" placeholder="Ex: 5.5" />
-                    </div>
-
-                    <div className="campo-grupo">
-                        <label>Horário Preferido</label>
-                        <select>
-                            <option>Selecione um horário</option>
-                            <option>Manhã (08:00 - 12:00)</option>
-                            <option>Tarde (13:00 - 18:00)</option>
+                        <label>Tipo de Material</label>
+                        <select 
+                            value={material} 
+                            onChange={(e) => setMaterial(e.target.value)}
+                            className="modal-input"
+                        >
+                            <option value="">Selecione o material...</option>
+                            <option value="Plástico">Plástico</option>
+                            <option value="Papel/Papelão">Papel / Papelão</option>
+                            <option value="Vidro">Vidro</option>
+                            <option value="Metal">Metal</option>
+                            <option value="Eletrônico">Resíduo Eletrônico</option>
                         </select>
+                    </div>
+
+                    <div className="campo-grupo">
+                        <label>Quantidade/Volume</label>
+                        <input 
+                            type="text" 
+                            placeholder="Ex: 2 sacos grandes ou 5kg"
+                            value={quantidade}
+                            onChange={(e) => setQuantidade(e.target.value)}
+                            className="modal-input"
+                        />
                     </div>
                 </div>
 
                 <div className="modal-footer">
-                    <button className="botao-cancelar" onClick={onClose}>Cancelar</button>
-                    <button className="botao-enviar" onClick={onClose}>Enviar Solicitação</button>
+                    <button className="btn-secundario" onClick={onClose}>Cancelar</button>
+                    <button className="btn-primario" onClick={handleSalvarSolicitacao}>Confirmar Solicitação</button>
                 </div>
             </div>
         </div>
     );
-};
-
-export default ModalSolicitarColeta;
+}
