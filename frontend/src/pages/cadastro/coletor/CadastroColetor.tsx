@@ -3,6 +3,23 @@ import { FaUser, FaIdCard, FaPhone, FaEnvelope, FaMapMarkerAlt, FaLock, FaCar } 
 import { useState, useEffect } from "react"; 
 import { useNavigate } from "react-router-dom"; 
 
+const maskCPF = (value: string) => {
+  return value
+    .replace(/\D/g, "")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d{1,2})/, "$1-$2")
+    .replace(/(-\d{2})\d+?$/, "$1");
+}
+
+const maskPhone = (value: string) => {
+  return value
+    .replace(/\D/g, "")
+    .replace(/(\d{2})(\d)/, "($1) $2")
+    .replace(/(\d{5})(\d)/, "$1-$2")
+    .replace(/(-\d{4})\d+?$/, "$1");
+};
+
 function CadastroColetor() {
     const navigate = useNavigate();
 
@@ -94,8 +111,6 @@ function CadastroColetor() {
         alert("Cadastro realizado com sucesso!");
         navigate("/dashboard-coletor");
 
-            alert("Cadastro realizado com sucesso!");
-            navigate("/dashboard-coletor"); 
 
         } catch (error) {
             setErroDados("Erro ao conectar com o servidor. Tente novamente.");
@@ -121,11 +136,11 @@ function CadastroColetor() {
                     <div className="row">
                         <div className="section">
                             <label className="label-icon"><FaIdCard /> CPF</label>
-                            <input type="text" value={cpf} onChange={(e) => setCpf(e.target.value)} />
+                            <input type="text" value={cpf} onChange={(e) => setCpf(maskCPF(e.target.value))} placeholder="000.000.000-00" />
                         </div>
                         <div className="section">
                             <label className="label-icon"><FaPhone /> Telefone</label>
-                            <input type="tel" placeholder="(00) 00000-0000" value={telefone} onChange={(e) => setTelefone(e.target.value)} />
+                            <input type="tel" placeholder="(00) 00000-0000" value={telefone} onChange={(e) => setTelefone(maskPhone(e.target.value))} />
                         </div>
                     </div>
 
