@@ -102,11 +102,11 @@ export class AuthController {
     // registro e login do ecoletor
     public async registerEcoletor(req: Request, res: Response): Promise<Response> {
         const dados: ICreateEcoletorDTO = req.body;
-        const { email, senha, cpf, id_cooperativa } = dados;
+        const { email, senha, cpf } = dados;
         
-        if (!email || !senha || !cpf || !id_cooperativa) {
+        if (!email || !senha || !cpf) {
             return res.status(400).json({ 
-                message: "Email, senha, CPF e ID da Cooperativa são obrigatórios." 
+                message: "Email, senha e CPF são obrigatórios." 
             });
         }
 
