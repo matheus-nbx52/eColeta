@@ -1,46 +1,88 @@
+.coleta-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    border: 1px solid #e2e8f0;
+}
+
+
+.coleta-info {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1.5fr 1fr 0.8fr; 
+    gap: 15px;
+    flex: 1; 
+    align-items: center;
+}
+
+.coleta-info div {
+    font-size: 0.9rem;
+    color: #475569;
+}
+
+.coleta-info strong {
+    color: #1e293b;
+    display: inline-block;
+    margin-right: 4px;
+}
+
+.coleta-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-left: 20px;
+}
+
+.btn-aceitar, .btn-recusar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 110px;
+    font-size: 0.85rem;
+}
+
+.btn-aceitar { background-color: #2d6a4f; color: white; }
+.btn-recusar { background-color: #c94b4b; color: white; }
+
+.titulo-secao {
+    font-size: 1.5rem;
+    color: #14532D;
+    margin-bottom: 24px;
+    font-weight: bold;
+    text-align: left; 
+}
 
 .coletas-container {
-  width: 100%;
-  margin-top: 40px;
+    width: 100%;
+    margin-top: 30px;
 }
 
-.coletas-container h2 {
-  margin-bottom: 30px;
-  font-size: 1.5rem;
-  color: #14532D;
-  font-weight: bold;
-}
-
-.coleta-card {
-  width: 100%;
-  background: #fff;
-  padding: 20px 24px;
-  border-radius: 12px;
-  margin-bottom: 16px;
+/* 🟢 ADICIONE ISSO NO SEU CSS */
+.endereco-wrapper {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  border: 1px solid #e2e8f0; /* Para combinar com os cards de cima */
-}
-
-/* Alinhamento das colunas internas */
-.coleta-card > div {
-  flex: 1; 
-  display: flex;
+  flex-wrap: wrap;
   gap: 5px;
-  font-size: 0.95rem;
-  white-space: nowrap;
+  align-items: center;
 }
 
-.btn-coleta {
-  background-color: #2e7d32;
-  color: #fff;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 500;
-  flex: 0 0 auto; 
+.link-mapa {
+  color: #1a5235; 
+  font-size: 0.85rem;
+  text-decoration: underline;
+  font-weight: bold;
+  transition: color 0.2s;
 }
 
+.link-mapa:hover {
+  color: #2e7d32;
+  text-decoration: none;
+}

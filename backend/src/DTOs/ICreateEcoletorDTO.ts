@@ -3,6 +3,7 @@ export interface ICreateEcoletorDTO {
     email: string;
     senha: string;
     cpf: string;
-    telefone?: string;
+    telefone: string;
     veiculo_tipo: string;
+    id_cooperativa: number;
 }

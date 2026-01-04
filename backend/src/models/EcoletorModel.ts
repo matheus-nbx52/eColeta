@@ -25,6 +25,9 @@ export class EcoletorModel {
     @Column({ length: 14, unique: true, nullable: false })
     cpf!: string;
 
+    @Column({ length: 15, nullable: false })
+    telefone!: string;
+
     @Column({ type: 'varchar', length: 50, nullable: false})
     veiculo_tipo!: string;  
 

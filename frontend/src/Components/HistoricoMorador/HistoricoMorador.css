@@ -43,3 +43,25 @@
     align-items: center;
     margin-bottom: 16px;
 }
+
+.badge-status {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.pendente {
+    background: #fff3e0;
+    color: #ff9800;
+}
+
+.em-coleta {
+    background: #e3f2fd;
+    color: #2196f3;
+}
+
+.coletado {
+    background: #e8f5e9;
+    color: #4caf50;
+}
