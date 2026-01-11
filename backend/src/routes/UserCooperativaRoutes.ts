@@ -12,4 +12,6 @@ router.patch('/perfil', authMiddleware, cooperativaController.updateProfile.bind
 
 router.delete('/perfil', authMiddleware, cooperativaController.deleteProfile.bind(cooperativaController));
 
+router.get('/listar', cooperativaController.listarTodas.bind(cooperativaController));
+
 export default router;
