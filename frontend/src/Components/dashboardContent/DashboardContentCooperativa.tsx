@@ -1,7 +1,7 @@
 import "./DashBoardContentCooperativa.css";
-import { 
-  Clock, MapPin, Calendar, 
-  Check, Scale, X, History, User, Truck, AlertTriangle, 
+import {
+  Clock, MapPin, Calendar,
+  Check, Scale, X, History, User, Truck, AlertTriangle,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -95,8 +95,7 @@ export default function DashBoardContentCooperativa() {
           return user;
         });
         localStorage.setItem('usuarios', JSON.stringify(novosUsuarios));
-        
-        // Limpa estados e recarrega
+
         setModalFinalizar(null);
         setModalRecusar(null);
         setPesoFinal("");
@@ -139,7 +138,7 @@ export default function DashBoardContentCooperativa() {
 
       <div className="quadro-lista-coletas">
         <h3 className="titulo-secao-coop">Coletas {abaAtiva}</h3>
-        
+
         <div className="lista-cards-container">
           {abaAtiva === 'Em Andamento' && (
             dados.emAndamento.length > 0 ? (
@@ -148,11 +147,10 @@ export default function DashBoardContentCooperativa() {
                   <div className="card-info-detalhada">
                     <div className="topo-card">
                       <h4>{item.material} <span className="badge-quantidade">{item.quantidade}</span></h4>
-                      <span className="badge-status azul">COLETOR A CAMINHO</span>
                     </div>
                     <div className="grade-envolvidos">
-                      <div className="perfil-mini"><User size={16} className="cor-morador"/><div><label>Morador</label><p>{item.moradorNome}</p></div></div>
-                      <div className="perfil-mini"><Truck size={16} className="cor-coletor"/><div><label>Coletor</label><p>{item.coletorNome}</p></div></div>
+                      <div className="perfil-mini"><User size={16} className="cor-morador" /><div><label>Morador</label><p>{item.moradorNome}</p></div></div>
+                      <div className="perfil-mini"><Truck size={16} className="cor-coletor" /><div><label>Coletor</label><p>{item.coletorNome}</p></div></div>
                     </div>
                     <div className="detalhes-linha">
                       <span><MapPin size={14} /> {item.endereco}</span>
@@ -160,7 +158,8 @@ export default function DashBoardContentCooperativa() {
                     </div>
                   </div>
                   <div className="card-acoes-coop">
-                    <button className="btn-receber" onClick={() => setModalFinalizar(item)}>Recebida <Check size={18}/></button>
+                    <span className="badge-status azul">COLETOR A CAMINHO</span>
+                    <button className="btn-receber" onClick={() => setModalFinalizar(item)}>Recebida <Check size={18} /></button>
                     <button className="btn-recusar-link" onClick={() => setModalRecusar(item)}>Recusar Material</button>
                   </div>
                 </div>
@@ -196,14 +195,15 @@ export default function DashBoardContentCooperativa() {
           <div className="modal-container-recusa">
             <div className="modal-header-recusa">
               <h3>Validar Peso</h3>
-              <button className="fechar-x" onClick={() => setModalFinalizar(null)}><X/></button>
+              <button className="fechar-x" onClick={() => setModalFinalizar(null)}><X /></button>
             </div>
             <div className="input-peso-container">
               <Scale size={24} />
-              <input type="number" value={pesoFinal} onChange={(e) => setPesoFinal(e.target.value)} placeholder="0.0 kg" autoFocus />
+              <input
+                type="number" step="0.1" value={pesoFinal} onChange={(e) => setPesoFinal(e.target.value)} placeholder="0.0 kg" autoFocus />
             </div>
             <div className="modal-footer-recusa">
-              <button className="btn-receber" style={{width: '100%'}} onClick={() => processarAcao('Coletado')}>Confirmar Recebimento</button>
+              <button className="btn-receber" style={{ width: '100%' }} onClick={() => processarAcao('Coletado')}>Confirmar Recebimento</button>
             </div>
           </div>
         </div>
@@ -214,12 +214,12 @@ export default function DashBoardContentCooperativa() {
           <div className="modal-container-recusa">
             <div className="modal-header-recusa">
               <h3>Motivo da Recusa</h3>
-              <button className="fechar-x" onClick={() => setModalRecusar(null)}><X/></button>
+              <button className="fechar-x" onClick={() => setModalRecusar(null)}><X /></button>
             </div>
-            <textarea 
-              className="input-area-motivo" 
-              value={motivoRecusa} 
-              onChange={(e) => setMotivoRecusa(e.target.value)} 
+            <textarea
+              className="input-area-motivo"
+              value={motivoRecusa}
+              onChange={(e) => setMotivoRecusa(e.target.value)}
               placeholder="Descreva o motivo..."
             />
             <div className="modal-footer-recusa">

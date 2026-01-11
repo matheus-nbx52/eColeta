@@ -21,8 +21,7 @@ export function SaibaMais() {
                 <div className='menu'>
                     <ul>
                         <li className="nav-link" onClick={() => navigate('/')}> Home </li>
-
-                        <li className="nav-link" onClick={() => navigate('/contato')}> Contato </li>
+                        <li className="nav-link" onClick={() => navigate("/guia-separacao")}> Guia de Separação </li>
                     </ul>
 
                     <button className="btn-entrar-fix" onClick={() => navigate('/login')}>Entrar</button>
@@ -131,7 +130,7 @@ export function SaibaMais() {
                             <h4>Visualize coletas disponíveis</h4>
                             <p>
                                 Veja todas as solicitações de coleta na sua região,
-                                 com informações detalhadas sobre tipo de material, peso e endereço.
+                                com informações detalhadas sobre tipo de material, peso e endereço.
                             </p>
                         </div>
                     </div>
@@ -141,7 +140,7 @@ export function SaibaMais() {
                         <div>
                             <h4>Aceite a coleta</h4>
                             <p>
-                                Escolha as coletas que deseja realizar e inicie o percurso. 
+                                Escolha as coletas que deseja realizar e inicie o percurso.
                                 O morador é notificado que você está a caminho.
                             </p>
                         </div>
@@ -152,7 +151,7 @@ export function SaibaMais() {
                         <div>
                             <h4>Realize a coleta</h4>
                             <p>
-                                Vá até o endereço, retire o material reciclável e 
+                                Vá até o endereço, retire o material reciclável e
                                 leve para a cooperativa cadastrada mais próxima.
                             </p>
                         </div>
