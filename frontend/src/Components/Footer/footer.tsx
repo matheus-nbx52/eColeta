@@ -1,4 +1,4 @@
-import "./Footer.css";
+import "./footer.css";
 import { MapPin, Mail,Leaf, Phone } from "lucide-react";
 
 export default function Footer() {
