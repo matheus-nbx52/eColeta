@@ -32,7 +32,7 @@ export class MoradorModel {
 
     //Antes o relacionamento estava ligado a EcoletorModel, mas isso não faz sentido
     //pois um morador não se relaciona com o ecoletor e sim com a coleta.
-    @OneToMany(() => ColetaModel, (coleta) => coleta.morador)
+    @OneToMany(() => ColetaModel, coleta => coleta.morador)
     coletas!: ColetaModel[];
 }
 
