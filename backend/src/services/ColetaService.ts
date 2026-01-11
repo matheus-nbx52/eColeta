@@ -70,7 +70,7 @@ export class ColetaService {
     }
 
 
-    // ✅ CRÍTICO: Evita race condition com LOCK FOR UPDATE
+    // Evita race condition com LOCK FOR UPDATE
     async aceitarColeta(id_coleta: number, id_coletor: number, id_cooperativa: number) {
         const queryRunner = AppDataSource.createQueryRunner();
         await queryRunner.connect();
@@ -156,11 +156,12 @@ export class ColetaService {
         });
 
         if (!coleta) {
-            throw new Error("Coleta não encontrada");
+            throw new Error("Coleta não encontrada ou coletor não autorizado");
         }
 
-        if (coleta.status_coleta !== StatusColeta.EM_CAMINHO) {
-            throw new Error("Coleta deve estar em caminho");
+        // Permite entregar se estiver aceita ou em caminho
+        if (coleta.status_coleta !== StatusColeta.EM_CAMINHO && coleta.status_coleta !== StatusColeta.ACEITA) {
+            throw new Error("Coleta deve estar aceita ou em caminho para ser entregue");
         }
 
         coleta.status_coleta = StatusColeta.ENTREGUE;
@@ -240,10 +241,11 @@ export class ColetaService {
         });
     }
 
-    // Dashboard da cooperativa (coletas em caminho + para validar)
+    // Dashboard da cooperativa (coletas aceitas, em caminho + para validar)
     async listarParaCooperativa(id_cooperativa: number) {
         return await this.coletaRepository.find({
             where: [
+                { cooperativa: { id_cooperativa }, status_coleta: StatusColeta.ACEITA },
                 { cooperativa: { id_cooperativa }, status_coleta: StatusColeta.EM_CAMINHO },
                 { cooperativa: { id_cooperativa }, status_coleta: StatusColeta.ENTREGUE }
             ],
@@ -252,7 +254,7 @@ export class ColetaService {
         });
     }
 
-    // Dashboard do coletor
+    // Dashboard do coletor (em andamento)
     async listarParaColetor(id_coletor: number) {
         return await this.coletaRepository.find({
             where: [
@@ -261,6 +263,29 @@ export class ColetaService {
             ],
             relations: ['morador', 'cooperativa', 'itens'],
             order: { atualizada_em: 'DESC' }
+        });
+    }
+
+    // Histórico do coletor (finalizadas)
+    async listarFinalizadasColetor(id_coletor: number) {
+        return await this.coletaRepository.find({
+            where: [
+                { ecoletor: { id_ecoletor: id_coletor }, status_coleta: StatusColeta.ENTREGUE },
+                { ecoletor: { id_ecoletor: id_coletor }, status_coleta: StatusColeta.VALIDADA }
+            ],
+            relations: ['morador', 'cooperativa', 'itens', 'itens.residuo'],
+            order: { validada_em: 'DESC', entregue_em: 'DESC' }
+        });
+    }
+
+    // Histórico da cooperativa (validadas)
+    async listarHistoricoCooperativa(id_cooperativa: number) {
+        return await this.coletaRepository.find({
+            where: [
+                { cooperativa: { id_cooperativa }, status_coleta: StatusColeta.VALIDADA }
+            ],
+            relations: ['morador', 'ecoletor', 'itens', 'itens.residuo'],
+            order: { validada_em: 'DESC' }
         });
     }
 }

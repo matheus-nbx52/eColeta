@@ -16,9 +16,11 @@ router.post("/:id/aceitar", authMiddleware, authorize('ecoletor'), (req: Request
 router.patch("/:id/iniciar-entrega", authMiddleware, authorize('ecoletor'), (req: Request, res: Response) => controller.iniciarEntrega(req, res));
 router.patch("/:id/entregar", authMiddleware, authorize('ecoletor'), (req: Request, res: Response) => controller.entregar(req, res));
 router.get("/coletor/dashboard", authMiddleware, authorize('ecoletor'), (req: Request, res: Response) => controller.dashboardColetor(req, res));
+router.get("/coletor/historico", authMiddleware, authorize('ecoletor'), (req: Request, res: Response) => controller.historicoColetor(req, res));
 
 // ============ COOPERATIVA ============
 router.get("/coop/dashboard", authMiddleware, authorize('cooperativa'), (req: Request, res: Response) => controller.dashboardCooperativa(req, res));
+router.get("/coop/historico", authMiddleware, authorize('cooperativa'), (req: Request, res: Response) => controller.historicoCooperativa(req, res));
 router.patch("/:id/validar", authMiddleware, authorize('cooperativa'), (req: Request, res: Response) => controller.validar(req, res));
 
 export default router;
