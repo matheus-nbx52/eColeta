@@ -96,7 +96,6 @@ export default function DashBoardContentCooperativa() {
         });
         localStorage.setItem('usuarios', JSON.stringify(novosUsuarios));
         
-        // Limpa estados e recarrega
         setModalFinalizar(null);
         setModalRecusar(null);
         setPesoFinal("");
@@ -148,7 +147,6 @@ export default function DashBoardContentCooperativa() {
                   <div className="card-info-detalhada">
                     <div className="topo-card">
                       <h4>{item.material} <span className="badge-quantidade">{item.quantidade}</span></h4>
-                      <span className="badge-status azul">COLETOR A CAMINHO</span>
                     </div>
                     <div className="grade-envolvidos">
                       <div className="perfil-mini"><User size={16} className="cor-morador"/><div><label>Morador</label><p>{item.moradorNome}</p></div></div>
@@ -160,6 +158,7 @@ export default function DashBoardContentCooperativa() {
                     </div>
                   </div>
                   <div className="card-acoes-coop">
+                    <span className="badge-status azul">COLETOR A CAMINHO</span>
                     <button className="btn-receber" onClick={() => setModalFinalizar(item)}>Recebida <Check size={18}/></button>
                     <button className="btn-recusar-link" onClick={() => setModalRecusar(item)}>Recusar Material</button>
                   </div>

@@ -157,8 +157,25 @@
   padding: 4px 10px;
   border-radius: 6px;
 }
+
 .badge-status {
-  color: #11683a;
+  font-size: 0.75rem;
+  font-weight: 800;
+  margin-bottom: 5px;
+  letter-spacing: 0.5px;
+}
+
+.badge-status.azul {
+  color: #0ea5e9;
+}
+
+.badge-status.verde {
+  color: #22c55e;
+
+}
+
+.badge-status.vermelho {
+  color: #ef4444;
 }
 
 .grade-envolvidos {
@@ -209,8 +226,9 @@
 .card-acoes-coop {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   min-width: 220px;
+  align-items: center; 
 }
 
 .btn-receber {
@@ -226,6 +244,7 @@
   justify-content: center;
   gap: 10px;
   box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+  width: 100%;
 }
 
 .btn-recusar-link {
@@ -237,6 +256,7 @@
   cursor: pointer;
   text-decoration: underline;
   text-align: center;
+  width: 100%;
 }
 
 .modal-overlay {
@@ -376,7 +396,6 @@
   align-items: center;
   gap: 8px;
 }
-
 
 @media (max-width: 1024px) {
   .card-coleta-item {

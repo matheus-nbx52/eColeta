@@ -11,6 +11,7 @@
     padding: 0 40px;
     border-bottom: none;
     z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .navegacao-esquerda {
