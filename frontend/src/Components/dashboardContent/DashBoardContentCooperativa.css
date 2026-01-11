@@ -140,6 +140,14 @@
   border-left-color: #ef4444;
 }
 
+.card-info-principal {
+transform: translateY(-28px); 
+}
+
+.txt-sub {
+ transform: translateY(10px);  
+}
+
 .topo-card h4 {
   font-size: 1.2rem;
   font-weight: 800;
@@ -167,6 +175,10 @@
 
 .badge-status.azul {
   color: #0ea5e9;
+  background: #f1f5f9;
+  padding: 2px 8px;
+  border-radius: 999px;
+  display: inline-block;
 }
 
 .badge-status.verde {
@@ -208,6 +220,7 @@
   color: #1e293b;
   margin: 0;
 }
+
 
 .detalhes-linha {
   display: flex;
@@ -292,6 +305,11 @@
   margin: 0;
   color: #1e293b;
   font-weight: 800;
+}
+
+.modal-footer-recusa {
+  display: flex;
+  gap: 14px; 
 }
 
 .fechar-x {
