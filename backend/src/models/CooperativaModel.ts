@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, OneToMany } from "typeorm";
 import { EnderecoModel } from "./EnderecoModel";
 import { EcoletorModel } from "./EcoletorModel";
+import { ColetaModel } from "./ColetaModel";
 
 @Entity("cooperativa")
 export class CooperativaModel {
@@ -29,4 +30,7 @@ export class CooperativaModel {
     
     @OneToMany(() => EcoletorModel, (ecoletor) => ecoletor.cooperativa)
     coletores!: EcoletorModel[];
+
+    @OneToMany(() => ColetaModel, coleta => coleta.cooperativa)
+    coletas!: ColetaModel[];
 }

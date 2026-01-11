@@ -27,9 +27,13 @@ export class AuthController {
         try {
             const novoMorador = await this.moradorService.create(dados);
 
+            const loginResult = await this.authService.loginMorador(email, senha);
+
+            const { senha: _, ...moradorSemSenha } = novoMorador;
+
             return res.status(201).json({
                 message: "Morador criado com sucesso.",
-                morador: novoMorador
+                morador: novoMorador,
             });
             
         } catch (error: any) {

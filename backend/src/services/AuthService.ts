@@ -43,7 +43,15 @@ export class AuthService {
             tipo: 'morador'
         });
         
-        return { token, user: { ...user, tipo: "morador" } };
+        return { 
+            token, 
+            user: { 
+                id_morador: user.id_morador,
+                nome: user.nome,
+                email: user.email,
+                tipo: "morador" 
+            } 
+         };
     }
 
     //Autenticação com token cooperativa

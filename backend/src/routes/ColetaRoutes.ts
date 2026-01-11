@@ -1,63 +1,24 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import { ColetaController } from "../controllers/ColetaController";
 import { authMiddleware } from "../middlewares/AuthMiddleware";
-
-import { onlyMorador, onlyWorkers, onlyEcoletor, onlyCooperativa } from "../middlewares/RoleMiddleware";
+import { authorize } from "../middlewares/RoleMiddleware";
 
 const router = Router();
-const coletaController = new ColetaController();
+const controller = new ColetaController();
 
-// [POST] /coletas - Criar nova solicitação de coleta (apenas moradores)
-// URL Final: POST http://localhost:3000/coletas
-router.post(
-    "/", 
-    authMiddleware, 
-    onlyMorador, 
-    coletaController.create.bind(coletaController)
-);
+// ============ MORADOR ============
+router.post("/", authMiddleware, authorize('morador'), (req: Request, res: Response) => controller.create(req, res));
+router.get("/minhas", authMiddleware, authorize('morador'), (req: Request, res: Response) => controller.minhasColetas(req, res));
 
-// [GET] Ver histórico pessoal
-// URL Final: GET http://localhost:3000/coletas/meu-historico
-router.get(
-    "/meu-historico", 
-    authMiddleware, 
-    onlyMorador, 
-    coletaController.listMine.bind(coletaController)
-);
+// ============ COLETOR ============
+router.get("/disponiveis", authMiddleware, authorize('ecoletor'), (req: Request, res: Response) => controller.coletasDisponiveis(req, res));
+router.post("/:id/aceitar", authMiddleware, authorize('ecoletor'), (req: Request, res: Response) => controller.aceitar(req, res));
+router.patch("/:id/iniciar-entrega", authMiddleware, authorize('ecoletor'), (req: Request, res: Response) => controller.iniciarEntrega(req, res));
+router.patch("/:id/entregar", authMiddleware, authorize('ecoletor'), (req: Request, res: Response) => controller.entregar(req, res));
+router.get("/coletor/dashboard", authMiddleware, authorize('ecoletor'), (req: Request, res: Response) => controller.dashboardColetor(req, res));
 
+// ============ COOPERATIVA ============
+router.get("/coop/dashboard", authMiddleware, authorize('cooperativa'), (req: Request, res: Response) => controller.dashboardCooperativa(req, res));
+router.patch("/:id/validar", authMiddleware, authorize('cooperativa'), (req: Request, res: Response) => controller.validar(req, res));
 
-// Rotas para Ecoletor/Cooperativa
-// [GET] Listar coletas disponíveis (Pendentes)
-// URL Final: GET http://localhost:3000/coletas/disponiveis
-router.get(
-    "/disponiveis", 
-    authMiddleware, 
-    onlyWorkers, 
-    coletaController.listAvailable.bind(coletaController)
-);
-
-
-router.patch(
-    "/:id/aceitar",
-    authMiddleware,
-    onlyEcoletor, // Importante: só ecoletor aceita
-    coletaController.aceitar.bind(coletaController)
-);
-
-//Ecoletor entrega
-router.patch(
-    "/:id/entregar", 
-    authMiddleware, 
-    onlyEcoletor, 
-    coletaController.entregar.bind(coletaController)
-);
-
-//Cooperativa finaliza
-router.patch(
-    "/:id/validar", 
-    authMiddleware, 
-    onlyCooperativa, 
-    coletaController.validar.bind(coletaController)
-);
-
-export { router as coletaRoutes };
+export default router;
