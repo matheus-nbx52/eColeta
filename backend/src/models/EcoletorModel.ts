@@ -57,6 +57,6 @@ export class EcoletorModel {
     })
     residuos_habilitados!: ResiduoModel[];
 
-    @OneToMany(() => ColetaModel, (coleta) => coleta.ecoletor)
+    @OneToMany(() => ColetaModel, coleta => coleta.ecoletor)
     coletas_executadas!: ColetaModel[];
 }
