@@ -124,4 +124,24 @@ export class ColetaController {
             return res.status(500).json({ message: error.message });
         }
     }
+
+    public async historicoColetor(req: Request, res: Response): Promise<Response> {
+        try {
+            const user = (req as any).user;
+            const coletas = await this.coletaService.listarFinalizadasColetor(user.id);
+            return res.status(200).json(coletas);
+        } catch (error: any) {
+            return res.status(500).json({ message: error.message });
+        }
+    }
+
+    public async historicoCooperativa(req: Request, res: Response): Promise<Response> {
+        try {
+            const user = (req as any).user;
+            const coletas = await this.coletaService.listarHistoricoCooperativa(user.id);
+            return res.status(200).json(coletas);
+        } catch (error: any) {
+            return res.status(500).json({ message: error.message });
+        }
+    }
 }

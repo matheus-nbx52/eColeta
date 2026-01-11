@@ -71,4 +71,14 @@ export class CooperativaController {
             return res.status(500).json({ message: 'Erro ao deletar conta.' });
         }
     }
+
+    public async listarTodas(req: Request, res: Response): Promise<Response> {
+        try {
+            const cooperativas = await this.cooperativaService.listarTodas();
+            return res.status(200).json(cooperativas);
+        } catch (error: any) {
+            console.error(error);
+            return res.status(500).json({ message: 'Erro ao listar cooperativas.' });
+        }
+    }
 }

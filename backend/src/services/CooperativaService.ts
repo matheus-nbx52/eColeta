@@ -103,4 +103,16 @@ export class CooperativaService {
 
         return true;
     }
+
+    async listarTodas() {
+        const cooperativas = await this.cooperativaRepository.find({
+            relations: ['endereco']
+        });
+        
+        return cooperativas.map(coop => ({
+            id_cooperativa: coop.id_cooperativa,
+            nome: coop.nome,
+            endereco: coop.endereco ? `${coop.endereco.rua}, ${coop.endereco.numero} - ${coop.endereco.bairro}` : ''
+        }));
+    }
 }

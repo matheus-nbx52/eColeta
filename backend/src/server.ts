@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import swaggerUI from 'swagger-ui-express';
+import { swaggerSpec } from './config/swagger';
 import { initializeDatabase } from './config/database';
 import authRoutes from './routes/AuthRoutes';
 import UserMoradorRoutes from './routes/UserMoradorRoutes';
@@ -14,6 +16,10 @@ app.use(express.json());
 
 // cors
 app.use(cors());
+
+// Rota de Documentação
+app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec));
+console.log('Swagger em http://localhost:3000/api-docs')
 
 // Rotas de autenticação
 app.use('/auth', authRoutes);

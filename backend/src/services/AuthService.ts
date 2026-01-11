@@ -40,7 +40,8 @@ export class AuthService {
         // Gerar token JWT
         const token = this.generateToken({
             id: user.id_morador,
-            tipo: 'morador'
+            tipo: 'morador',
+            email: user.email
         });
         
         return { 

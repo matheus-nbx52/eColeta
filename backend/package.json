@@ -4,13 +4,18 @@
   "scripts": {
     "start": "node dist/server.js",
     "build": "tsc",
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts"
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "seed:residuos": "ts-node src/scripts/seedResiduos.ts",
+    "drop:tables": "ts-node src/scripts/dropTables.ts",
+    "drop:table": "ts-node src/scripts/dropTables.ts --table"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.5",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.10.1",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
     "express": "^5.1.0",
     "nodemon": "^3.1.11",
     "ts-node": "^10.9.2",
@@ -26,6 +31,8 @@
     "path": "^0.12.7",
     "pg": "^8.16.3",
     "reflect-metadata": "^0.2.2",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
     "typeorm": "^0.3.27"
   }
 }
