@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToOne, OneToMany, JoinColumn } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToOne, OneToMany, JoinColumn, CreateDateColumn, UpdateDateColumn } from "typeorm";
 import { MoradorModel } from "./MoradorModel";
 import { EcoletorModel } from "./EcoletorModel";
 import { AvaliacaoModel } from "./AvaliacaoModel";
@@ -6,7 +6,14 @@ import { TransacaoModel } from "./TransacaoModel";
 import { ItemColetaModel } from "./ItemColetaModel";
 import { CooperativaModel } from "./CooperativaModel";
 
-export type StatusColeta = 'Pendente' | 'Aceito' | 'A Caminho' | 'Entregue_Coop' | 'Concluido' | 'Cancelado';
+export enum StatusColeta {
+    PENDENTE = "Pendente",
+    ACEITA = "Aceito",
+    EM_CAMINHO = "A Caminho",
+    ENTREGUE = "Entregue_Coop",
+    VALIDADA = "Concluido",
+    CANCELADA = "Cancelado"
+}
 
 @Entity("coleta")
 export class ColetaModel {
@@ -18,37 +25,55 @@ export class ColetaModel {
     @JoinColumn({ name: 'fk_morador' })
     morador!: MoradorModel;
 
-    @ManyToOne(()=> CooperativaModel)
-    @JoinColumn({ name: 'fk_cooperativa'})
-    cooperativa!: CooperativaModel;
+    @ManyToOne(() => CooperativaModel, cooperativa => cooperativa.coletas, { nullable: true })
+    @JoinColumn({ name: 'fk_cooperativa' })
+    cooperativa!: CooperativaModel | null;
 
     @ManyToOne(() => EcoletorModel, ecoletor => ecoletor.coletas_executadas, { nullable: true })
     @JoinColumn({ name: 'fk_ecoletor' })
     ecoletor!: EcoletorModel | null;
 
     @Column({
-        type: 'enum', 
-        enum: ['Pendente', 'Aceito', 'A Caminho', 'Entregue_Coop','Concluido', 'Cancelado'], 
-        default: 'Pendente',
+        type: 'enum',
+        enum: StatusColeta,
+        default: StatusColeta.PENDENTE
     })
     status_coleta!: StatusColeta;
 
-    @Column({ type: 'timestamp', nullable: true})
+    @Column({ type: 'timestamp', nullable: true })
     data_solicitacao!: Date;
 
-    @Column({ type: 'timestamp', nullable: true})
+    @Column({ type: 'timestamp', nullable: true })
     data_agendada!: Date;
 
-    @Column({ length: 255, nullable: true})
+    @Column({ length: 255, nullable: true })
     observacoes!: string;
 
-    @OneToOne(() => AvaliacaoModel, avaliacao => avaliacao.coleta)
-    avaliacao!: AvaliacaoModel;
+    @Column({ type: 'float', nullable: true })
+    peso_kg!: number | null;
 
-    @OneToOne(() => TransacaoModel, (transacao) => transacao.coleta)
-    transacao!: TransacaoModel;
+    @Column({ type: 'int', nullable: true })
+    pontos_gerados!: number | null;
 
-    @OneToMany(() => ItemColetaModel, (item) => item.coleta, { cascade: true })
+    @Column({ type: 'timestamp', nullable: true })
+    entregue_em!: Date | null;
+
+    @Column({ type: 'timestamp', nullable: true })
+    validada_em!: Date | null;
+
+    @OneToOne(() => AvaliacaoModel, avaliacao => avaliacao.coleta, { nullable: true })
+    avaliacao!: AvaliacaoModel | null;
+
+    @OneToOne(() => TransacaoModel, transacao => transacao.coleta, { nullable: true })
+    transacao!: TransacaoModel | null;
+
+    @OneToMany(() => ItemColetaModel, item => item.coleta, { cascade: true, eager: true })
     itens!: ItemColetaModel[];
+
+    @CreateDateColumn({ type: 'timestamp' })
+    criada_em!: Date;
+
+    @UpdateDateColumn({ type: 'timestamp' })
+    atualizada_em!: Date;
 
 }

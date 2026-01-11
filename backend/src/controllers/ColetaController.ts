@@ -7,16 +7,13 @@ export class ColetaController {
 
     public async create(req: Request, res: Response): Promise<Response> {
         try {
-            // O usuário vem do middleware de auth/roles
-            const user = (req as any).user; 
+            const user = (req as any).user;
             const { data_agendada, observacoes, itens } = req.body;
 
-            // Validação básica de entrada
             if (!itens || itens.length === 0) {
                 return res.status(400).json({ message: "Selecione ao menos um resíduo." });
             }
 
-            // Monta o DTO
             const dadosColeta: ICreateColetaDTO = {
                 id_morador: user.id,
                 data_agendada,
@@ -25,72 +22,106 @@ export class ColetaController {
             };
 
             const novaColeta = await this.coletaService.create(dadosColeta);
-
-            return res.status(201).json({
-                message: "Solicitação criada com sucesso!",
-                coleta: novaColeta
-            });
+            return res.status(201).json({ message: "Solicitação criada!", coleta: novaColeta });
         } catch (error: any) {
-            return res.status(500).json({ message: error.message || "Erro interno." });
-        }
-    }
-
-    public async listMine(req: Request, res: Response): Promise<Response> {
-        try {
-            const user = (req as any).user;
-            const coletas = await this.coletaService.listarPorMorador(user.id);
-            return res.status(200).json(coletas);
-        } catch (error) {
-            return res.status(500).json({ message: "Erro ao buscar histórico." });
-        }
-    }
-
-    public async listAvailable(req: Request, res: Response): Promise<Response> {
-        try {
-            const coletas = await this.coletaService.listarDisponiveis();
-            return res.status(200).json(coletas);
-        } catch (error) {
-            return res.status(500).json({ message: "Erro ao buscar coletas disponíveis." });
+            return res.status(500).json({ message: error.message });
         }
     }
 
     public async aceitar(req: Request, res: Response): Promise<Response> {
-        try{
+        try {
+            const { id } = req.params;
+            const { id_cooperativa } = req.body;
+            const user = (req as any).user;
+
+            if (!id_cooperativa) {
+                return res.status(400).json({ message: "Selecione uma cooperativa de destino." });
+            }
+
+            const coleta = await this.coletaService.aceitarColeta(Number(id), user.id, id_cooperativa);
+            
+            return res.status(200).json({ 
+                message: "Coleta aceita com sucesso!", 
+                coleta 
+            });
+        } catch (error: any) {
+            return res.status(409).json({ message: error.message });
+        }
+    }
+
+    public async iniciarEntrega(req: Request, res: Response): Promise<Response> {
+        try {
             const { id } = req.params;
             const user = (req as any).user;
 
-            const coletaAtualizada = await this.coletaService.aceitarColeta(Number(id), user.id);
-
-            return res.status(200).json({ message: "Coleta aceita!", coleta: coletaAtualizada });
-        } catch (error:any) {
+            const coleta = await this.coletaService.iniciarEntrega(Number(id), user.id);
+            return res.status(200).json({ message: "Saiu para entrega!", coleta });
+        } catch (error: any) {
             return res.status(400).json({ message: error.message });
         }
     }
 
-    //ecoletor
     public async entregar(req: Request, res: Response): Promise<Response> {
         try {
             const { id } = req.params;
-            const user = (req as any);
+            const user = (req as any).user;
 
-            const result = await this.coletaService.entregarNaCooperativa(Number(id), user.id);
-            return res.status(200).json({ message: "Coleta marcada como entregue.", coleta: result });
-        } catch (error: any ) {
+            const coleta = await this.coletaService.entregarNaCooperativa(Number(id), user.id);
+            return res.status(200).json({ message: "Coleta entregue!", coleta });
+        } catch (error: any) {
             return res.status(400).json({ message: error.message });
         }
     }
 
-    // Cooperativa avisa: "Confirmei o peso e liberei os pontos"
     public async validar(req: Request, res: Response): Promise<Response> {
         try {
             const { id } = req.params;
-            const user = (req as any).user; // Cooperativa
+            const { peso_kg } = req.body;
+            const user = (req as any).user;
 
-            const result = await this.coletaService.validarEFinalizar(Number(id), user.id);
+            const result = await this.coletaService.validarEFinalizar(Number(id), user.id, peso_kg);
             return res.status(200).json(result);
         } catch (error: any) {
             return res.status(400).json({ message: error.message });
         }
     }
-    
+
+    public async minhasColetas(req: Request, res: Response): Promise<Response> {
+        try {
+            const user = (req as any).user;
+            const coletas = await this.coletaService.listarPorMorador(user.id);
+            return res.status(200).json(coletas);
+        } catch (error: any) {
+            return res.status(500).json({ message: error.message });
+        }
+    }
+
+    public async coletasDisponiveis(req: Request, res: Response): Promise<Response> {
+        try {
+            const coletas = await this.coletaService.listarDisponiveis();
+            return res.status(200).json(coletas);
+        } catch (error: any) {
+            return res.status(500).json({ message: error.message });
+        }
+    }
+
+    public async dashboardCooperativa(req: Request, res: Response): Promise<Response> {
+        try {
+            const user = (req as any).user;
+            const coletas = await this.coletaService.listarParaCooperativa(user.id);
+            return res.status(200).json(coletas);
+        } catch (error: any) {
+            return res.status(500).json({ message: error.message });
+        }
+    }
+
+    public async dashboardColetor(req: Request, res: Response): Promise<Response> {
+        try {
+            const user = (req as any).user;
+            const coletas = await this.coletaService.listarParaColetor(user.id);
+            return res.status(200).json(coletas);
+        } catch (error: any) {
+            return res.status(500).json({ message: error.message });
+        }
+    }
 }

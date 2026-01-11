@@ -1,55 +1,62 @@
 import { AppDataSource } from "../config/database";
-import { ColetaModel } from "../models/ColetaModel";
-import { MoradorModel } from "../models/MoradorModel";
+import { ColetaModel, StatusColeta } from "../models/ColetaModel";
+import { ICreateColetaDTO } from "../DTOs/IColetaDTO";
 import { ItemColetaModel } from "../models/ItemColetaModel";
 import { ResiduoModel } from "../models/ResiduoModel";
+import { MoradorModel } from "../models/MoradorModel";
 import { EcoletorModel } from "../models/EcoletorModel";
 import { CooperativaModel } from "../models/CooperativaModel";
-import { TransacaoModel } from "../models/TransacaoModel";
-
-import { ICreateColetaDTO } from "../DTOs/IColetaDTO";
 
 export class ColetaService {
     private coletaRepository = AppDataSource.getRepository(ColetaModel);
+    private itemColetaRepository = AppDataSource.getRepository(ItemColetaModel);
+    private residuoRepository = AppDataSource.getRepository(ResiduoModel);
     private moradorRepository = AppDataSource.getRepository(MoradorModel);
-    private itemRepo = AppDataSource.getRepository(ItemColetaModel);
+    private ecoletorRepository = AppDataSource.getRepository(EcoletorModel);
+    private cooperativaRepository = AppDataSource.getRepository(CooperativaModel);
 
     async create(dados: ICreateColetaDTO) {
-        const { id_morador, data_agendada, observacoes, itens } = dados;
-
-        const morador = await this.moradorRepository.findOne({
-            where: {id_morador}
-        });
-        if (!morador) throw new Error("Morador não encontrado.");
-
         const queryRunner = AppDataSource.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
 
         try {
-            const novaColeta = queryRunner.manager.create(ColetaModel, {
-                morador,
-                data_solicitacao: new Date(),
-                data_agendada: new Date(data_agendada),
-                observacoes: observacoes || undefined,
-                status_coleta: 'Pendente'
+            const morador = await this.moradorRepository.findOne({
+                where: { id_morador: dados.id_morador }
             });
-            const coletaSalva = await queryRunner.manager.save(novaColeta);
 
-            for (const item of itens) {
-                const residuo = await queryRunner.manager.findOne(ResiduoModel, {
-                    where: { id_residuo: item.fk_residuo }
+            if (!morador) {
+                throw new Error("Morador não encontrado");
+            }
+
+            // 1. Criar coleta
+            const coleta = this.coletaRepository.create({
+                morador,
+                data_agendada: dados.data_agendada,
+                observacoes: dados.observacoes,
+                status_coleta: StatusColeta.PENDENTE,
+                data_solicitacao: new Date()
+            });
+
+            const coletaSalva = await queryRunner.manager.save(ColetaModel, coleta);
+
+            // 2. Adicionar itens
+            for (const item of dados.itens) {
+                const residuo = await this.residuoRepository.findOne({
+                    where: { id_residuo: item.fk_residuo }  // ← MUDOU AQUI
                 });
+
                 if (!residuo) {
-                    throw new Error(`Resíduo com ID ${item.fk_residuo} não encontrado.`);
+                    throw new Error(`Resíduo ${item.fk_residuo} não encontrado`);
                 }
 
-                const novoItemColeta = queryRunner.manager.create(ItemColetaModel, {
+                const itemColeta = this.itemColetaRepository.create({
                     coleta: coletaSalva,
                     residuo,
                     quantidade_estimada: item.quantidade
                 });
-                await queryRunner.manager.save(novoItemColeta);
+
+                await queryRunner.manager.save(ItemColetaModel, itemColeta);
             }
 
             await queryRunner.commitTransaction();
@@ -62,126 +69,198 @@ export class ColetaService {
         }
     }
 
-    async listarPorMorador(id_morador: number) {
-        return this.coletaRepository.find({
-            where: { morador: { id_morador } },
-            relations: ['ecoletor', 'itens', 'itens.residuo'],
-            order: { data_solicitacao: 'DESC' }
-        });
-    }
 
-    async listarDisponiveis() {
-        return this.coletaRepository.find({
-            where: { status_coleta: 'Pendente' },
-            relations: ['morador', 'morador.endereco', 'itens', 'itens.residuo'],
-            order: { data_solicitacao: 'ASC' }
-        });
-    }
-
-    async aceitarColeta(id_coleta: number, id_ecoletor: number){
-            const coleta = await this.coletaRepository.findOne({ where: { id_coleta } });
-
-            if (!coleta) throw new Error("Coleta não encontrada");
-            
-            if (coleta.status_coleta !== 'Pendente') {
-                throw new Error("Esta coleta já foi aceita por outro ecoletor ou não está pendente.");
-            }
-
-            const ecoletorRepo = AppDataSource.getRepository(EcoletorModel);
-            const ecoletor = await ecoletorRepo.findOne({ where: { id_ecoletor } });
-
-            if (!ecoletor) throw new Error("Ecoletor inválido");
-
-            coleta.ecoletor = ecoletor;
-            coleta.status_coleta = 'Aceito';
-
-            return this.coletaRepository.save(coleta);
-    }
-
-    async entregarNaCooperativa(id_coleta: number, id_ecoletor: number) {
-        const coleta = await this.coletaRepository.findOne({ 
-            where: { id_coleta },
-            relations: ['ecoletor']
-        });
-
-            if (!coleta) throw new Error("Coleta não encontrada.");
-
-            // Segurança: Só quem aceitou pode entregar
-            if (coleta.ecoletor?.id_ecoletor !== id_ecoletor) {
-            throw new Error("Você não é o responsável por esta coleta.");
-            }
-
-            if (coleta.status_coleta !== 'Aceito' && coleta.status_coleta !== 'A Caminho') {
-            throw new Error("Status inválido para entrega.");
-            }
-
-            coleta.status_coleta = 'Entregue_Coop';
-            return this.coletaRepository.save(coleta);
-    }
-
-    async validarEFinalizar(id_coleta: number, id_cooperativa: number) {
-        // Busca coleta com os itens e o ecoletor (para saber de qual coop ele é)
-        const coleta = await this.coletaRepository.findOne({ 
-            where: { id_coleta },
-            relations: ['ecoletor', 'ecoletor.cooperativa', 'itens', 'itens.residuo'] 
-        });
-
-        if (!coleta) throw new Error("Coleta não encontrada.");
-
-        // 1. Verifica se está no status certo (Entregue)
-        if (coleta.status_coleta !== 'Entregue_Coop') {
-            throw new Error("Esta coleta ainda não foi entregue pelo Ecoletor.");
-        }
-
-        // 2. Segurança: A cooperativa logada deve ser a mesma do Ecoletor
-        if (coleta.ecoletor?.cooperativa.id_cooperativa !== id_cooperativa) {
-            throw new Error("Esta coleta pertence a outra cooperativa.");
-        }
-
-        // 3. Transação Atômica (Gera pontos e conclui)
+    // ✅ CRÍTICO: Evita race condition com LOCK FOR UPDATE
+    async aceitarColeta(id_coleta: number, id_coletor: number, id_cooperativa: number) {
         const queryRunner = AppDataSource.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
 
         try {
-            // A. Calcula Pontos (Aqui a Cooperativa poderia até editar o peso se quisesse, 
-            // mas vamos manter o peso estimado por enquanto)
-            let totalPontos = 0;
-            coleta.itens.forEach(item => {
-                const pontosItem = item.quantidade_estimada * item.residuo.pontos_por_kg;
-                totalPontos += pontosItem;
+            // Lock pessimista: bloqueia a linha enquanto a transação roda
+            const coleta = await queryRunner.manager
+                .createQueryBuilder(ColetaModel, 'coleta')
+                .setLock('pessimistic_write')
+                .where('coleta.id_coleta = :id', { id: id_coleta })
+                .getOne();
+
+            if (!coleta) {
+                throw new Error("Coleta não encontrada");
+            }
+
+            if (coleta.status_coleta !== StatusColeta.PENDENTE) {
+                throw new Error(`Coleta já foi ${coleta.status_coleta} por outro coletor`);
+            }
+
+            // Verificar se coletor existe
+            const coletor = await this.ecoletorRepository.findOne({
+                where: { id_ecoletor: id_coletor }
             });
 
-            // B. Cria o Extrato (Transação)
-            const novaTransacao = queryRunner.manager.create(TransacaoModel, {
-                coleta: coleta,
-                valor: totalPontos, 
-                data_transacao: new Date(),
-                tipo: 'entrada'
+            if (!coletor) {
+                throw new Error("Coletor não encontrado");
+            }
+
+            // Verificar se cooperativa existe
+            const cooperativa = await this.cooperativaRepository.findOne({
+                where: { id_cooperativa: id_cooperativa }
             });
-            await queryRunner.manager.save(novaTransacao);
 
-            // C. Finaliza a Coleta
-            coleta.status_coleta = 'Concluido';
-            // Vincula a cooperativa explicitamente na coleta também (opcional, mas bom pra relatórios)
-            const coop = await queryRunner.manager.findOneBy(CooperativaModel, { id_cooperativa });
-            if(coop) coleta.cooperativa = coop;
+            if (!cooperativa) {
+                throw new Error("Cooperativa não encontrada");
+            }
 
-            await queryRunner.manager.save(coleta);
+            // Atualizar coleta
+            coleta.status_coleta = StatusColeta.ACEITA;
+            coleta.ecoletor = coletor;
+            coleta.cooperativa = cooperativa;
+
+            const coletaAtualizada = await queryRunner.manager.save(ColetaModel, coleta);
 
             await queryRunner.commitTransaction();
 
-            return { 
-                message: "Coleta validada e pontos creditados!", 
-                pontos: totalPontos,
-                coleta 
-            };
+            console.log(`[EVENTO] Coleta ${id_coleta} aceita. Cooperativa ${id_cooperativa} foi notificada`);
 
+            return coletaAtualizada;
         } catch (error) {
             await queryRunner.rollbackTransaction();
             throw error;
         } finally {
             await queryRunner.release();
         }
+    }
+
+    // Coletor saiu com a coleta
+    async iniciarEntrega(id_coleta: number, id_coletor: number) {
+        const coleta = await this.coletaRepository.findOne({
+            where: { id_coleta, ecoletor: { id_ecoletor: id_coletor } }
+        });
+
+        if (!coleta) {
+            throw new Error("Coleta não encontrada ou coletor não autorizado");
+        }
+
+        if (coleta.status_coleta !== StatusColeta.ACEITA) {
+            throw new Error("Coleta deve estar aceita para iniciar entrega");
+        }
+
+        coleta.status_coleta = StatusColeta.EM_CAMINHO;
+        return await this.coletaRepository.save(coleta);
+    }
+
+    // Coletor entregou na cooperativa
+    async entregarNaCooperativa(id_coleta: number, id_coletor: number) {
+        const coleta = await this.coletaRepository.findOne({
+            where: { id_coleta, ecoletor: { id_ecoletor: id_coletor } },
+            relations: ['cooperativa']
+        });
+
+        if (!coleta) {
+            throw new Error("Coleta não encontrada");
+        }
+
+        if (coleta.status_coleta !== StatusColeta.EM_CAMINHO) {
+            throw new Error("Coleta deve estar em caminho");
+        }
+
+        coleta.status_coleta = StatusColeta.ENTREGUE;
+        coleta.entregue_em = new Date();
+
+        return await this.coletaRepository.save(coleta);
+    }
+
+    // Cooperativa valida peso e gera pontos
+    async validarEFinalizar(id_coleta: number, id_cooperativa: number, peso_kg: number) {
+        const queryRunner = AppDataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+
+        try {
+            const coleta = await queryRunner.manager.findOne(ColetaModel, {
+                where: { 
+                    id_coleta,
+                    cooperativa: { id_cooperativa }
+                },
+                relations: ['morador', 'itens']
+            });
+
+            if (!coleta) {
+                throw new Error("Coleta não encontrada nesta cooperativa");
+            }
+
+            if (coleta.status_coleta !== StatusColeta.ENTREGUE) {
+                throw new Error("Coleta deve estar entregue");
+            }
+
+            // Calcular pontos (1kg = 10 pontos)
+            const pontosGerados = Math.floor(peso_kg * 10);
+
+            coleta.peso_kg = peso_kg;
+            coleta.pontos_gerados = pontosGerados;
+            coleta.status_coleta = StatusColeta.VALIDADA;
+            coleta.validada_em = new Date();
+
+            const coletaFinalizada = await queryRunner.manager.save(ColetaModel, coleta);
+
+            // Adicionar pontos ao morador
+            const morador = coleta.morador;
+            morador.saldo = (morador.saldo || 0) + pontosGerados;
+            await queryRunner.manager.save(MoradorModel, morador);
+
+            await queryRunner.commitTransaction();
+
+            return {
+                message: "Coleta validada e finalizada",
+                coleta: coletaFinalizada,
+                pontos_gerados: pontosGerados
+            };
+        } catch (error) {
+            await queryRunner.rollbackTransaction();
+            throw error;
+        } finally {
+            await queryRunner.release();
+        }
+    }
+
+    // Listar coletas pendentes (para coletores)
+    async listarDisponiveis() {
+        return await this.coletaRepository.find({
+            where: { status_coleta: StatusColeta.PENDENTE },
+            relations: ['morador', 'itens', 'itens.residuo'],
+            order: { criada_em: 'DESC' }
+        });
+    }
+
+    // Histórico do morador
+    async listarPorMorador(id_morador: number) {
+        return await this.coletaRepository.find({
+            where: { morador: { id_morador } },
+            relations: ['ecoletor', 'cooperativa', 'itens', 'itens.residuo'],
+            order: { criada_em: 'DESC' }
+        });
+    }
+
+    // Dashboard da cooperativa (coletas em caminho + para validar)
+    async listarParaCooperativa(id_cooperativa: number) {
+        return await this.coletaRepository.find({
+            where: [
+                { cooperativa: { id_cooperativa }, status_coleta: StatusColeta.EM_CAMINHO },
+                { cooperativa: { id_cooperativa }, status_coleta: StatusColeta.ENTREGUE }
+            ],
+            relations: ['morador', 'ecoletor', 'itens', 'itens.residuo'],
+            order: { atualizada_em: 'DESC' }
+        });
+    }
+
+    // Dashboard do coletor
+    async listarParaColetor(id_coletor: number) {
+        return await this.coletaRepository.find({
+            where: [
+                { ecoletor: { id_ecoletor: id_coletor }, status_coleta: StatusColeta.ACEITA },
+                { ecoletor: { id_ecoletor: id_coletor }, status_coleta: StatusColeta.EM_CAMINHO }
+            ],
+            relations: ['morador', 'cooperativa', 'itens'],
+            order: { atualizada_em: 'DESC' }
+        });
     }
 }

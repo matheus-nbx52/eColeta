@@ -4,7 +4,7 @@ import { initializeDatabase } from './config/database';
 import authRoutes from './routes/AuthRoutes';
 import UserMoradorRoutes from './routes/UserMoradorRoutes';
 import ResiduoRoutes from "./routes/ResiduoRoutes";
-import { coletaRoutes } from './routes/ColetaRoutes';
+import ColetaRoutes from "./routes/ColetaRoutes";
 import UserEcoletorRoutes from './routes/UserEcoletorRoutes';
 import UsercooperativaRoutes from './routes/UserCooperativaRoutes';
 
@@ -24,7 +24,7 @@ app.use('/ecoletor', UserEcoletorRoutes);
 // Rotas da cooperativa
 app.use('/cooperativa', UsercooperativaRoutes);
 // Rotas para coletas
-app.use("/coletas", coletaRoutes);
+app.use("/coleta", ColetaRoutes);
 // Rota para listar residuo
 app.use('/residuos', ResiduoRoutes);
 
