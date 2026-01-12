@@ -1,17 +1,22 @@
-import { MapPin, Calendar, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { MapPin, Calendar, Clock, CheckCircle, XCircle, Truck } from 'lucide-react';
 import "./ColetasAndamento.css";
 
-function ColetasAndamento({ coleta, onFinalizar, onCancelar }: any) {
+function ColetasAndamento({ coleta, onFinalizar, onCancelar, onVerDetalhes, status_coleta }: any) {
+  const status = status_coleta || coleta.status_coleta;
+  const isAceita = status === 'Aceito' || status === 'Aceita';
+  const isEmCaminho = status === 'A Caminho' || status === 'Em_Caminho';
+
   return (
     <div className="coleta-card card-andamento-container"> 
-  
       <div className="accent-bar-blue" />
       
       <div className="card-body">
         <div className="info-section">
           <div className="header-coleta">
             <span className="material-nome">{coleta.material}</span>
-            <span className="badge-andamento">EM ANDAMENTO</span>
+            <span className="badge-andamento">
+              {isEmCaminho ? 'A CAMINHO' : 'ACEITA'}
+            </span>
           </div>
 
           <div className="detalhes-horizontal">
@@ -31,14 +36,15 @@ function ColetasAndamento({ coleta, onFinalizar, onCancelar }: any) {
         </div>
 
         <div className="actions-section-vertical">
+          {onVerDetalhes && (
+            <button className="btn-finalizar" onClick={onVerDetalhes} style={{ backgroundColor: '#2196f3' }}>
+              <Truck size={20} />
+              Ver Detalhes
+            </button>
+          )}
           <button className="btn-finalizar" onClick={onFinalizar}>
             <CheckCircle size={20} />
-            Finalizar Coleta
-          </button>
-
-          <button className="btn-cancelar-agendamento" onClick={() => onCancelar(coleta.id)}>
-            <XCircle size={18} />
-            Cancelar Agendamento
+            {isEmCaminho ? 'Entregar na Cooperativa' : 'Finalizar Coleta'}
           </button>
         </div>
       </div>

@@ -4,11 +4,15 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; 
 import ModalSolicitarColeta from '../modalSolicitarColeta/ModalSolicitarColeta';
 import HistoricoMorador from '../HistoricoMorador/HistoricoMorador';
+import { coletasService } from '../../services/coletasService';
+import { api } from '../../services/api';
+import type { ColetaResponse } from '../../types/coleta';
 
 export default function DashboardContentMorador() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [filtroAtivo, setFiltroAtivo] = useState<'Pendente' | 'Em Coleta' | 'Coletado'>('Pendente');
     const navigate = useNavigate(); 
+    const [loading, setLoading] = useState(true);
     
     const [stats, setStats] = useState({ 
         pendentes: 0, 
@@ -18,58 +22,73 @@ export default function DashboardContentMorador() {
         pontos: 0 
     });
 
-    const carregarEstatisticas = () => {
-        const idLogado = localStorage.getItem('usuarioLogadoId');
-        const usuariosRaw = localStorage.getItem('usuarios');
-        
-        if (idLogado && usuariosRaw) {
-            const usuarios = JSON.parse(usuariosRaw);
-            const usuarioAtual = usuarios.find((u: any) => String(u.id) === String(idLogado));
-
-            if (usuarioAtual && usuarioAtual.historico) {
-                const calculo = usuarioAtual.historico.reduce((acc: any, item: any) => {
-                    if (item.status === 'Pendente') acc.pendentes++;
-                    else if (item.status === 'Em Coleta') acc.emColeta++;
-                    else if (item.status === 'Coletado') {
-                        acc.coletadas++;
-                        acc.totalKg += Number(item.quantidade?.replace('kg', '') || 0);
+    const carregarEstatisticas = async () => {
+        try {
+            setLoading(true);
+            const coletas = await coletasService.listarPorMorador();
+            
+            const calculo = coletas.reduce((acc: any, coleta: ColetaResponse) => {
+                if (coleta.status_coleta === 'Pendente') {
+                    acc.pendentes++;
+                } else if (coleta.status_coleta === 'Aceito' || coleta.status_coleta === 'A Caminho' || coleta.status_coleta === 'EM_CAMINHO') {
+                    acc.emColeta++;
+                } else if (coleta.status_coleta === 'Entregue_Coop' || coleta.status_coleta === 'Concluido' || coleta.status_coleta === 'VALIDADA' || coleta.status_coleta === 'Validada') {
+                    acc.coletadas++;
+                    // Calcular kg a partir dos itens ou do peso validado
+                    if (coleta.peso_kg) {
+                        acc.totalKg += coleta.peso_kg;
+                    } else if (coleta.itens) {
+                        coleta.itens.forEach(item => {
+                            acc.totalKg += item.quantidade_estimada || 0;
+                        });
                     }
-                    return acc;
-                }, { pendentes: 0, emColeta: 0, coletadas: 0, totalKg: 0 });
+                }
+                return acc;
+            }, { pendentes: 0, emColeta: 0, coletadas: 0, totalKg: 0 });
 
-                setStats({
-                    ...calculo,
-                    pontos: Math.floor(calculo.totalKg * 10)
-                });
+            // Buscar saldo real do morador do perfil
+            let pontos = 0;
+            try {
+                const perfilResponse = await api.get('/morador/perfil');
+                pontos = perfilResponse.data.morador?.saldo || 0;
+            } catch (error) {
+                console.error('Erro ao buscar saldo do morador:', error);
+                // Fallback: calcular pelos pontos gerados nas coletas validadas
+                pontos = coletas
+                    .filter(c => c.pontos_gerados)
+                    .reduce((acc, c) => acc + (c.pontos_gerados || 0), 0);
             }
+
+            setStats({
+                ...calculo,
+                pontos
+            });
+        } catch (error) {
+            console.error('Erro ao carregar estatísticas:', error);
+        } finally {
+            setLoading(false);
         }
     };
 
     useEffect(() => {
         carregarEstatisticas();
-        window.addEventListener('storage', carregarEstatisticas);
-        return () => window.removeEventListener('storage', carregarEstatisticas);
     }, []);
 
    const handleFecharModal = () => {
     setIsModalOpen(false);
     carregarEstatisticas(); 
     setFiltroAtivo('Pendente');
-    
-    // Avisa os outros componentes
-    window.dispatchEvent(new Event('storage'));
-
-    // ✨ ROLAGEM AUTOMÁTICA
-    setTimeout(() => {
-        const elemento = document.getElementById('secao-historico');
-        if (elemento) {
-            elemento.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'start'      
-            });
-        }
-    }, 300); 
 };
+
+    if (loading) {
+        return (
+            <div className="conteudo-principal-recipiente">
+                <div style={{ textAlign: 'center', padding: '40px' }}>
+                    <p>Carregando dados...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="conteudo-principal-recipiente">
@@ -146,9 +165,13 @@ export default function DashboardContentMorador() {
                 </div>
             </div>
 
-            <HistoricoMorador filtroStatus={filtroAtivo} />
+            <HistoricoMorador filtroStatus={filtroAtivo} onColetasChange={carregarEstatisticas} />
 
-        <ModalSolicitarColeta isOpen={isModalOpen} onClose={handleFecharModal} />
+        <ModalSolicitarColeta 
+          isOpen={isModalOpen} 
+          onClose={handleFecharModal}
+          onSuccess={carregarEstatisticas}
+        />
         </div>
     );
 }

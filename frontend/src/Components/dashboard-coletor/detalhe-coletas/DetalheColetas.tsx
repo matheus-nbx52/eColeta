@@ -12,10 +12,11 @@ interface Props {
   coleta: Coleta;
   onClose: () => void;
   onFinalizar: () => void;
+  onIniciar?: () => void;
   iniciada: boolean;   
   setIniciada: (valor: boolean) => void; 
 }
-const DetalheColetas: React.FC<Props> = ({ coleta, onClose, onFinalizar, iniciada, setIniciada }) => {
+const DetalheColetas: React.FC<Props> = ({ coleta, onClose, onFinalizar, onIniciar, iniciada, setIniciada }) => {
 
 
   return (
@@ -58,9 +59,15 @@ const DetalheColetas: React.FC<Props> = ({ coleta, onClose, onFinalizar, iniciad
           <button
             className="btn-finalizar-grande"
             style={{ backgroundColor: '#2196f3' }} 
-            onClick={() => setIniciada(true)} 
+            onClick={() => {
+              if (onIniciar) {
+                onIniciar();
+              } else {
+                setIniciada(true);
+              }
+            }} 
           >
-            INICIAR COLETA
+            INICIAR ENTREGA
           </button>
         ) : (
           <button
@@ -68,7 +75,7 @@ const DetalheColetas: React.FC<Props> = ({ coleta, onClose, onFinalizar, iniciad
             style={{ backgroundColor: '#6abf4b' }} 
             onClick={onFinalizar}
           >
-            FINALIZAR COLETA
+            ENTREGAR NA COOPERATIVA
           </button>
         )}
       </div>

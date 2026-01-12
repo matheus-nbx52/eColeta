@@ -34,16 +34,31 @@ export default function Login() {
 
       if (token && user) {
           console.log("TOKEN ENCONTRADO! Salvando...");
-          login(user, token);
+          
+          // Normalizar dados do usuário para ter um ID genérico
+          const normalizedUser = {
+            ...user,
+            id: user.id_morador?.toString() || 
+                user.id_cooperativa?.toString() || 
+                user.id_ecoletor?.toString() || 
+                user.id?.toString() || 
+                ''
+          };
+          
+          // Fazer login (isso já limpa dados antigos)
+          login(normalizedUser, token);
+          
+          // Aguardar um pouco para garantir que o contexto foi atualizado
+          setTimeout(() => {
+            if (tipo === 'morador') navigate('/dashboard-morador');
+            else if (tipo === 'ecoletor') navigate('/dashboard-coletor');
+            else if (tipo === 'cooperativa') navigate('/dashboard-cooperativa');
+          }, 100);
       } else {
           console.warn("ATENÇÃO: A resposta não trouxe token ou usuário.");
           setErro("Erro ao fazer login. Tente novamente.");
           return;
       }
-
-      if (tipo === 'morador') navigate('/dashboard-morador');
-      else if (tipo === 'ecoletor') navigate('/dashboard-coletor');
-      else if (tipo === 'cooperativa') navigate('/dashboard-cooperativa');
 
     } catch (error: any) {
       console.error("ERRO COMPLETO:", error);
