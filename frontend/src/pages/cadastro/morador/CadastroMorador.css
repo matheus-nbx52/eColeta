@@ -175,3 +175,24 @@ font-size: 14px;
         font-size: 15px;
     }
 }
+
+
+.cadastro-page {
+  min-height: 100vh;
+  width: 100%;
+  
+
+  background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.4)), 
+    url('../../../assets/Logo/hero.png');
+  background-size: cover;    
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  
+  background-color: #f4f7f6; 
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 0; 
+}
