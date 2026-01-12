@@ -130,3 +130,32 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     font-weight: bold;
     cursor: pointer;
 }
+
+.alerta-endereco-info {
+  background-color: #f8fafc; /* Azul acinzentado bem claro */
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #0d9488; /* Barra lateral na cor principal */
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 25px;
+}
+
+.alerta-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #0d9488;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.alerta-endereco-info p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.alerta-endereco-info strong {
+  color: #1e293b;
+}
