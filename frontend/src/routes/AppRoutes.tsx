@@ -13,6 +13,8 @@ import PontosMorador from "../Components/pontosMorador/PontosMorador"
 import { SaibaMais } from '../Components/saibaMais/SaibaMais';
 import Login from "../pages/login/Login"
 import PerfilMorador from "../Components/perfilMorador/PerfilMorador"
+import PoliticaPrivacidade from "../pages/termosPolitica/PoliticaPrivacidade"
+import TermosUso from "../pages/termosPolitica/TermosUso"
 
 function AppRoutes() {
     return (
@@ -32,8 +34,8 @@ function AppRoutes() {
                     <Route path="/pontos-morador" element={<PontosMorador />} />
                     <Route path="/login" element={<Login/>} />
                     <Route path="/PerfilMorador" element={<PerfilMorador/>} />
-                    
-                   
+                    <Route path="/politica-privacidade" element={<PoliticaPrivacidade/>} />
+                     <Route path="/termos-uso" element={<TermosUso/>} />
                    
                 </Routes>
             </BrowserRouter>

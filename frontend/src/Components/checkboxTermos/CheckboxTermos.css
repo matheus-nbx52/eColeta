@@ -1,0 +1,33 @@
+.container-termos-reutilizavel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  padding: 10px;
+  background: #f8fafc; 
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #4a5568;
+}
+
+.container-termos-reutilizavel input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #ed8936; 
+}
+
+.container-termos-reutilizavel label {
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.container-termos-reutilizavel a {
+  color: #ed8936;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.container-termos-reutilizavel a:hover {
+  text-decoration: underline;
+}
