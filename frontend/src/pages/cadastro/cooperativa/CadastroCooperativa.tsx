@@ -13,6 +13,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';
+import CheckboxTermos from '../../../Components/checkboxTermos/CheckboxTermos';
 
 const maskCNPJ = (value: string) => {
   return value
@@ -50,6 +51,8 @@ const CadastroCooperativa: React.FC = () => {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
+
+  const [aceitouTermos, setAceitouTermos] = useState(false);
 
   const [cep, setCep] = useState('');
   const [rua, setRua] = useState('');
@@ -96,7 +99,7 @@ const CadastroCooperativa: React.FC = () => {
       papel || papelao || plastico || metal || vidro || eletronicos || oleoDeCozinha;
 
     if (!nomeEmpresa || !nomeResponsavel || !cnpj || !telefone || !email ||
-        !cep || !rua || !numero || !bairro || !cidade || !senha) {
+      !cep || !rua || !numero || !bairro || !cidade || !senha) {
       setErro('Preencha todos os campos obrigatórios.');
       return;
     }
@@ -180,7 +183,7 @@ const CadastroCooperativa: React.FC = () => {
         {erro && <div className="erro">{erro}</div>}
 
         <form className="cadastro-form" onSubmit={handleSubmit}>
-          
+
           <div className="section">
             <label><FaBuilding /> Nome da Empresa</label>
             <input required value={nomeEmpresa} onChange={e => setNomeEmpresa(e.target.value)} />
@@ -279,6 +282,12 @@ const CadastroCooperativa: React.FC = () => {
               <input required type="password" value={confirmarSenha} onChange={e => setConfirmarSenha(e.target.value)} />
             </div>
           </div>
+
+          <CheckboxTermos
+            valor={aceitouTermos}
+            onChange={setAceitouTermos}
+          />
+
 
           <button className="btn-criar" type="submit" disabled={carregando}>
             {carregando ? "Criando conta..." : "Criar Conta"}

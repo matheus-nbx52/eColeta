@@ -12,6 +12,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../../services/api"; 
 import { useAuth } from "../../../contexts/AuthContext"; 
+import CheckboxTermos from "../../../Components/checkboxTermos/CheckboxTermos";
 
 const maskCPF = (value: string) => {
   return value
@@ -51,6 +52,8 @@ function CadastroColetor() {
   const [telefone, setTelefone] = useState("");
   const [senha, setSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
+
+  const [aceitouTermos, setAceitouTermos] = useState(false);
   
   const [cep, setCep] = useState("");
   const [rua, setRua] = useState("");
@@ -108,6 +111,10 @@ function CadastroColetor() {
       telefone: telefone.replace(/\D/g, ''),
       veiculo_tipo: veiculo, 
     };
+
+    if (!aceitouTermos) {
+    return setErroDados("Você precisa aceitar os termos de uso para continuar.");
+}
 
     try {
       setCarregando(true);
@@ -335,6 +342,11 @@ function CadastroColetor() {
               />
             </div>
           </div>
+
+          <CheckboxTermos 
+            valor={aceitouTermos} 
+            onChange={setAceitouTermos} 
+          />
 
           <button className="btn-criar" type="submit" disabled={carregando}>
             {carregando ? "Criando e Acessando..." : "Criar Conta"}

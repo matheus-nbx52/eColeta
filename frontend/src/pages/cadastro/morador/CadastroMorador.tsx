@@ -11,6 +11,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../../services/api";
 import { useAuth } from "../../../contexts/AuthContext";
+import CheckboxTermos from "../../../Components/checkboxTermos/CheckboxTermos";
 
 function CadastroMorador() {
     const navigate = useNavigate();
@@ -33,6 +34,8 @@ function CadastroMorador() {
     const [erroEndereco, setErroEndereco] = useState("");
     const [erroSenha, setErroSenha] = useState("");
     const [carregando, setCarregando] = useState(false);
+
+    const [aceitouTermos, setAceitouTermos] = useState(false);
 
     const handleCPF = (value: string) => {
         const x = value
@@ -299,6 +302,12 @@ function CadastroMorador() {
                             />
                         </div>
                     </div>
+
+                    <CheckboxTermos 
+                                valor={aceitouTermos} 
+                                onChange={setAceitouTermos} 
+                              />
+                    
 
                    <button className="btn-criar" type="submit" disabled={carregando}>
                         {carregando ? "Criando conta..." : "Criar Conta"}
