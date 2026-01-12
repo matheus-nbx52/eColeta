@@ -36,6 +36,7 @@ function CadastroMorador() {
     const [carregando, setCarregando] = useState(false);
 
     const [aceitouTermos, setAceitouTermos] = useState(false);
+    const [erroTermos, setErroTermos] = useState(false)
 
     const handleCPF = (value: string) => {
         const x = value
@@ -109,6 +110,11 @@ function CadastroMorador() {
         if (!senha || senha !== confirmarSenha) {
             setErroSenha("As senhas não conferem");
             return;
+        }
+
+        if (!aceitouTermos) {
+            setErroTermos(true); 
+            return; 
         }
 
         const payload = {
@@ -303,19 +309,27 @@ function CadastroMorador() {
                         </div>
                     </div>
 
-                    <CheckboxTermos 
-                                valor={aceitouTermos} 
-                                onChange={setAceitouTermos} 
-                              />
-                    
+                    <CheckboxTermos
+                        valor={aceitouTermos}
+                        onChange={(valor) => {
+                            setAceitouTermos(valor);
+                            if (valor) setErroTermos(false); 
+                        }}
+                    />
+                    {erroTermos && (
+                        <p style={{ color: '#e53e3e', fontSize: '0.85rem', marginTop: '5px', fontWeight: 'bold' }}>
+                            ⚠️ Você precisa aceitar os Termos e a Política de Privacidade para continuar.
+                        </p>
+                    )}
 
-                   <button className="btn-criar" type="submit" disabled={carregando}>
+
+                    <button className="btn-criar" type="submit" disabled={carregando}>
                         {carregando ? "Criando conta..." : "Criar Conta"}
                     </button>
-        </form>
-      </div>
-    </div>
-  );
+                </form>
+            </div>
+        </div>
+    );
 };
 
 export default CadastroMorador;

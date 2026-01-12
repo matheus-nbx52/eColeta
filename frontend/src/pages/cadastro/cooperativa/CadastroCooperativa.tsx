@@ -53,6 +53,7 @@ const CadastroCooperativa: React.FC = () => {
   const [confirmarSenha, setConfirmarSenha] = useState('');
 
   const [aceitouTermos, setAceitouTermos] = useState(false);
+  const [erroTermos, setErroTermos] = useState(false)
 
   const [cep, setCep] = useState('');
   const [rua, setRua] = useState('');
@@ -119,6 +120,11 @@ const CadastroCooperativa: React.FC = () => {
       return;
     }
 
+     if (!aceitouTermos) {
+  setErroTermos(true); 
+  return; 
+}
+
     const materiais = [];
     if (papel) materiais.push('papel');
     if (papelao) materiais.push('papelao');
@@ -178,7 +184,7 @@ const CadastroCooperativa: React.FC = () => {
   return (
     <div className="cadastro-page">
       <div className="cadastro-card">
-        <h2><FaBuilding /> Cadastro de Cooperativa</h2>
+        <h2> Cadastro de Cooperativa</h2>
 
         {erro && <div className="erro">{erro}</div>}
 
@@ -284,10 +290,17 @@ const CadastroCooperativa: React.FC = () => {
           </div>
 
           <CheckboxTermos
-            valor={aceitouTermos}
-            onChange={setAceitouTermos}
-          />
-
+                      valor={aceitouTermos}
+                      onChange={(valor) => {
+                        setAceitouTermos(valor);
+                        if (valor) setErroTermos(false);
+                      }}
+                    />
+                    {erroTermos && (
+                      <p style={{ color: '#e53e3e', fontSize: '0.85rem', marginTop: '5px', fontWeight: 'bold' }}>
+                        ⚠️ Você precisa aceitar os Termos e a Política de Privacidade para continuar.
+                      </p>
+                    )}
 
           <button className="btn-criar" type="submit" disabled={carregando}>
             {carregando ? "Criando conta..." : "Criar Conta"}

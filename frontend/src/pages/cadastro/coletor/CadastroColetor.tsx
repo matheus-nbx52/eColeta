@@ -10,8 +10,8 @@ import {
 } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "../../../services/api"; 
-import { useAuth } from "../../../contexts/AuthContext"; 
+import { api } from "../../../services/api";
+import { useAuth } from "../../../contexts/AuthContext";
 import CheckboxTermos from "../../../Components/checkboxTermos/CheckboxTermos";
 
 const maskCPF = (value: string) => {
@@ -54,16 +54,17 @@ function CadastroColetor() {
   const [confirmarSenha, setConfirmarSenha] = useState("");
 
   const [aceitouTermos, setAceitouTermos] = useState(false);
-  
+  const [erroTermos, setErroTermos] = useState(false)
+
   const [cep, setCep] = useState("");
   const [rua, setRua] = useState("");
   const [numero, setNumero] = useState("");
   const [complemento, setComplemento] = useState("");
   const [bairro, setBairro] = useState("");
   const [cidade, setCidade] = useState("");
-  
-  const [veiculo, setVeiculo] = useState(""); 
-  const [cnh, setCnh] = useState(""); 
+
+  const [veiculo, setVeiculo] = useState("");
+  const [cnh, setCnh] = useState("");
 
   const [erroDados, setErroDados] = useState("");
   const [erroEndereco, setErroEndereco] = useState("");
@@ -103,22 +104,24 @@ function CadastroColetor() {
     if (!veiculo || !cnh) return setErroVeiculo('Preencha os dados do veículo');
     if (!senha || senha !== confirmarSenha) return setErroSenha('As senhas não conferem');
 
+    if (!aceitouTermos) {
+  setErroTermos(true); 
+  return; 
+}
+
     const payload = {
       nome,
       email: email.toLowerCase().trim(),
       senha,
       cpf: cpf.replace(/\D/g, ''),
       telefone: telefone.replace(/\D/g, ''),
-      veiculo_tipo: veiculo, 
+      veiculo_tipo: veiculo,
     };
 
-    if (!aceitouTermos) {
-    return setErroDados("Você precisa aceitar os termos de uso para continuar.");
-}
 
     try {
       setCarregando(true);
-      
+
       console.log("Cadastrando usuário...");
       await api.post('/auth/register/ecoletor', payload);
 
@@ -132,7 +135,7 @@ function CadastroColetor() {
       login(user, token);
 
       alert("Bem-vindo ao eColeta! Seu cadastro foi realizado.");
-      
+
       navigate("/dashboard-coletor");
 
     } catch (error: any) {
@@ -140,7 +143,7 @@ function CadastroColetor() {
       const msg = error.response?.data?.message || "Erro ao realizar cadastro.";
       setErroDados(msg);
     } finally {
-      setCarregando(false); 
+      setCarregando(false);
     }
   };
 
@@ -153,7 +156,7 @@ function CadastroColetor() {
         {erroDados && <p className="erro">{erroDados}</p>}
 
         <form className="cadastro-form" onSubmit={handleSubmit}>
-          
+
           <div className="section">
             <label className="label-icon">
               <FaUser /> Nome Completo
@@ -343,11 +346,18 @@ function CadastroColetor() {
             </div>
           </div>
 
-          <CheckboxTermos 
-            valor={aceitouTermos} 
-            onChange={setAceitouTermos} 
+          <CheckboxTermos
+            valor={aceitouTermos}
+            onChange={(valor) => {
+              setAceitouTermos(valor);
+              if (valor) setErroTermos(false);
+            }}
           />
-
+          {erroTermos && (
+            <p style={{ color: '#e53e3e', fontSize: '0.85rem', marginTop: '5px', fontWeight: 'bold' }}>
+              ⚠️ Você precisa aceitar os Termos e a Política de Privacidade para continuar.
+            </p>
+          )}
           <button className="btn-criar" type="submit" disabled={carregando}>
             {carregando ? "Criando e Acessando..." : "Criar Conta"}
           </button>
