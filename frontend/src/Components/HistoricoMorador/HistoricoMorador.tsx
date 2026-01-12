@@ -1,90 +1,107 @@
 import { Calendar, Package, Clock, XCircle, Info } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import './HistoricoMorador.css';
-
-interface Coleta {
-  id: string;
-  material: string;
-  quantidade: string;
-  status: 'Pendente' | 'Em Coleta' | 'Coletado';
-  data: string;
-  horario: string;
-}
-
-interface Usuario {
-  id: string;
-  historico: Coleta[];
-}
+import { coletasService } from '../../services/coletasService';
+import type { ColetaResponse } from '../../types/coleta';
+import Swal from 'sweetalert2';
 
 interface Props {
   filtroStatus?: 'Pendente' | 'Em Coleta' | 'Coletado';
+  onColetasChange?: () => void;
 }
 
-const HistoricoMorador = ({ filtroStatus }: Props) => {
-  const [historico, setHistorico] = useState<Coleta[]>([]);
+const HistoricoMorador = ({ filtroStatus, onColetasChange }: Props) => {
+  const [historico, setHistorico] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const carregarDados = () => {
-    const idLogado = localStorage.getItem('usuarioLogadoId');
-    const usuariosRaw = localStorage.getItem('usuarios');
-
-    if (!idLogado || !usuariosRaw) {
-      setHistorico([]);
-      return;
-    }
-
-    let usuarios: Usuario[] = [];
+  const carregarDados = async () => {
     try {
-      usuarios = JSON.parse(usuariosRaw);
-    } catch {
+      setLoading(true);
+      const coletas = await coletasService.listarPorMorador();
+      
+      const coletasMapeadas = coletas
+        .filter((coleta: ColetaResponse) => coleta.status_coleta !== 'Cancelado' && coleta.status_coleta !== 'CANCELADA')
+        .map((coleta: ColetaResponse) => {
+          const dataAgendada = new Date(coleta.data_agendada);
+          const materiais = coleta.itens?.map((item: any) => item.residuo?.nome || 'Material').join(', ') || 'Material';
+          const quantidadeTotal = coleta.itens?.reduce((acc: number, item: any) => acc + (item.quantidade_estimada || 0), 0) || 0;
+          
+          // Mapear status do backend para o formato do frontend
+          let status: 'Pendente' | 'Em Coleta' | 'Coletado' = 'Pendente';
+          if (coleta.status_coleta === 'Pendente') {
+            status = 'Pendente';
+          } else if (coleta.status_coleta === 'Aceito' || coleta.status_coleta === 'A Caminho' || coleta.status_coleta === 'EM_CAMINHO') {
+            status = 'Em Coleta';
+          } else if (coleta.status_coleta === 'Entregue_Coop' || coleta.status_coleta === 'Concluido' || coleta.status_coleta === 'VALIDADA' || coleta.status_coleta === 'Validada') {
+            status = 'Coletado';
+          }
+
+          return {
+            id: coleta.id_coleta.toString(),
+            material: materiais,
+            quantidade: `${quantidadeTotal}kg`,
+            status,
+            data: dataAgendada.toLocaleDateString('pt-BR'),
+            horario: dataAgendada.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            status_coleta: coleta.status_coleta,
+            peso_kg: coleta.peso_kg,
+            pontos_gerados: coleta.pontos_gerados
+          };
+        });
+
+      let lista = coletasMapeadas;
+
+      if (filtroStatus) {
+        lista = coletasMapeadas.filter(c => c.status === filtroStatus);
+      }
+
+      setHistorico(lista.reverse());
+    } catch (error) {
+      console.error('Erro ao carregar histórico:', error);
       setHistorico([]);
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    const usuarioAtual = usuarios.find(
-      (u) => String(u.id) === String(idLogado)
-    );
-
-    if (!usuarioAtual) {
-      setHistorico([]);
-      return;
-    }
-
-    let lista = usuarioAtual.historico ? [...usuarioAtual.historico] : [];
-
-    if (filtroStatus) {
-      lista = lista.filter(c => c.status === filtroStatus);
-    }
-
-    setHistorico(lista.reverse());
   };
 
-  const handleCancelar = (id: string) => {
-    if (!window.confirm('Deseja realmente cancelar este agendamento?')) return;
+  const handleCancelar = async (id: string) => {
+    const result = await Swal.fire({
+      title: 'Cancelar Coleta',
+      text: 'Deseja realmente cancelar este agendamento?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sim, cancelar',
+      cancelButtonText: 'Não'
+    });
 
-    const idLogado = localStorage.getItem('usuarioLogadoId');
-    const usuariosRaw = localStorage.getItem('usuarios');
-    if (!idLogado || !usuariosRaw) return;
+    if (!result.isConfirmed) return;
 
-    const usuarios: Usuario[] = JSON.parse(usuariosRaw);
-    const index = usuarios.findIndex(
-      (u) => String(u.id) === String(idLogado)
-    );
-
-    if (index === -1) return;
-
-    usuarios[index].historico = usuarios[index].historico.filter(
-      (c) => c.id !== id
-    );
-
-    localStorage.setItem('usuarios', JSON.stringify(usuarios));
-    window.dispatchEvent(new Event('storage'));
-    carregarDados();
+    try {
+      await coletasService.cancelarColeta(parseInt(id));
+      
+      Swal.fire({
+        title: 'Cancelada!',
+        text: 'A coleta foi cancelada com sucesso.',
+        icon: 'success',
+        confirmButtonText: 'OK'
+      }).then(() => {
+        carregarDados();
+        if (onColetasChange) onColetasChange();
+      });
+    } catch (error: any) {
+      Swal.fire({
+        title: 'Erro!',
+        text: error.response?.data?.message || 'Não foi possível cancelar a coleta.',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+    }
   };
 
   useEffect(() => {
     carregarDados();
-    window.addEventListener('storage', carregarDados);
-    return () => window.removeEventListener('storage', carregarDados);
   }, [filtroStatus]); 
 
   const handleInfo = (e: React.MouseEvent) => {
@@ -92,8 +109,15 @@ const HistoricoMorador = ({ filtroStatus }: Props) => {
     alert('Sua coleta mudará de status assim que um coletor aceitar.');
   };
 
+  if (loading) {
+    return (
+      <div className="historico-wrapper" id="secao-historico">
+        <p>Carregando histórico...</p>
+      </div>
+    );
+  }
+
   return (
-   
      <div className="historico-wrapper" id="secao-historico">
         <h2 className={`titulo-secao ${filtroStatus?.toLowerCase().replace(/\s+/g, '-')}`}>
        {filtroStatus}

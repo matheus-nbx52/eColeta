@@ -4,14 +4,16 @@ import {
   Droplets, Clock, Calendar as CalendarIcon
 } from 'lucide-react';
 import './ModalSolicitarColeta.css';
-import Swal from "sweetalert2"
+import Swal from "sweetalert2";
+import { coletasService } from '../../services/coletasService';
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
-export default function ModalSolicitarColeta({ isOpen, onClose }: ModalProps) {
+export default function ModalSolicitarColeta({ isOpen, onClose, onSuccess }: ModalProps) {
   const [cep, setCep] = useState('');
   const [rua, setRua] = useState('');
   const [bairro, setBairro] = useState('');
@@ -20,63 +22,86 @@ export default function ModalSolicitarColeta({ isOpen, onClose }: ModalProps) {
   const [peso, setPeso] = useState('');
   const [dataColeta, setDataColeta] = useState('');
   const [horario, setHorario] = useState('');
+  const [observacoes, setObservacoes] = useState('');
   const [materiaisSelecionados, setMateriaisSelecionados] = useState<string[]>([]);
+  const [carregando, setCarregando] = useState(false);
 
-
-
-  const handleSubmit = () => {
-  if (!cep || !rua || !peso || !dataColeta || !horario || materiaisSelecionados.length === 0) {
-    alert('Por favor, preencha todos os campos e selecione pelo menos um tipo de material.');
-    return;
-  }
-
-    const idLogado = localStorage.getItem('usuarioLogadoId');
-    const usuariosRaw = localStorage.getItem('usuarios');
-
-    if (!idLogado || !usuariosRaw) {
-      alert('Usuário não encontrado. Faça login.');
+  const handleSubmit = async () => {
+    if (!cep || !rua || !peso || !dataColeta || !horario || materiaisSelecionados.length === 0) {
+      Swal.fire({
+        title: 'Atenção!',
+        text: 'Por favor, preencha todos os campos e selecione pelo menos um tipo de material.',
+        icon: 'warning',
+        confirmButtonText: 'OK'
+      });
       return;
     }
 
-    const usuarios = JSON.parse(usuariosRaw);
+    try {
+      setCarregando(true);
+      
+      // Mapear nomes de materiais para os IDs do backend
+      const mapaResiduo: { [key: string]: number } = {
+        'Papel': 1,
+        'Plástico': 2,
+        'Metal': 3,
+        'Vidro': 4,
+        'Eletrônicos': 5,
+        'Óleo': 6
+      };
 
-    const novaColeta = {
-      id: Date.now().toString(),
-      material: materiaisSelecionados.join(', '),
-      quantidade: `${peso} kg`,
-      status: 'Pendente',
-      data: dataColeta,
-      horario: horario
-    };
+      // Combinar data e horário
+      const dataHora = new Date(`${dataColeta}T${horario}:00`);
+      const dataAgendada = dataHora.toISOString();
 
-    const usuariosAtualizados = usuarios.map((u: any) => {
-      if (u.id === idLogado) {
-        return {
-          ...u,
-          historico: [...(u.historico || []), novaColeta]
-        };
-      }
-      return u;
-    });
+      const itens = materiaisSelecionados.map(nome => ({
+        fk_residuo: mapaResiduo[nome] || 1,
+        quantidade: parseFloat(peso) || 0
+      }));
 
-   localStorage.setItem('usuarios', JSON.stringify(usuariosAtualizados));
+      const payload = {
+        data_agendada: dataAgendada,
+        observacoes: observacoes || '',
+        itens: itens
+      };
 
-Swal.fire({
-  title: 'Solicitação Enviada!',
-  text: 'Obrigado por colaborar com o meio ambiente. Acompanhe o status no seu histórico.',
-  icon: 'success',
-  confirmButtonText: 'Entendido'
-}).then((result) => {
-  if (result.isConfirmed) {
-      onClose(); 
-  }
-});
-
-    setPeso('');                  
-    setDataColeta('');            
-    setHorario('');              
-    setMateriaisSelecionados([]);
-    onClose();
+      await coletasService.criarColeta(payload);
+      
+      // Limpar formulário
+      setCep('');
+      setRua('');
+      setBairro('');
+      setCidade('');
+      setEstado('');
+      setPeso('');
+      setDataColeta('');
+      setHorario('');
+      setObservacoes('');
+      setMateriaisSelecionados([]);
+      
+      // Fechar modal imediatamente
+      onClose();
+      
+      // Mostrar mensagem de sucesso
+      Swal.fire({
+        title: 'Solicitação Enviada!',
+        text: 'Obrigado por colaborar com o meio ambiente. Acompanhe o status no seu histórico.',
+        icon: 'success',
+        confirmButtonText: 'Entendido'
+      }).then(() => {
+        if (onSuccess) onSuccess();
+      });
+    } catch (error: any) {
+      console.error('Erro ao criar coleta:', error);
+      Swal.fire({
+        title: 'Erro!',
+        text: error.response?.data?.message || 'Erro ao solicitar coleta. Tente novamente.',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+    } finally {
+      setCarregando(false);
+    }
   };
 
 
@@ -218,6 +243,7 @@ Swal.fire({
                 className="input-custom"
                 value={horario}
                 onChange={(e) => setHorario(e.target.value)}
+                disabled={carregando}
               >
                 <option value="">Selecione</option>
                 {["08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00"]
@@ -226,15 +252,27 @@ Swal.fire({
               <Clock size={18} className="icon-absolute" />
             </div>
           </div>
+
+          <div className="campo-grupo">
+            <label className="label-teal">Observações (opcional)</label>
+            <textarea
+              className="input-custom"
+              value={observacoes}
+              onChange={(e) => setObservacoes(e.target.value)}
+              placeholder="Informações adicionais sobre a coleta..."
+              rows={3}
+              disabled={carregando}
+            />
+          </div>
         </div>
 
         <div className="modal-btns-footer">
-          <button className="btn-cancel-border" onClick={onClose}>
+          <button className="btn-cancel-border" onClick={onClose} disabled={carregando}>
             Cancelar
           </button>
 
-          <button className="btn-submit-solid" onClick={handleSubmit}>
-            Solicitar Coleta
+          <button className="btn-submit-solid" onClick={handleSubmit} disabled={carregando}>
+            {carregando ? 'Enviando...' : 'Solicitar Coleta'}
           </button>
         </div>
       </div>

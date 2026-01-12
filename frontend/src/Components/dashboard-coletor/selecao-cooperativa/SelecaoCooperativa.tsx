@@ -1,9 +1,10 @@
-import { X, Building2, Check, AlertCircle } from "lucide-react";
+import { X, Building2, Check, AlertCircle, Loader2 } from "lucide-react";
 import "./SelecaoCooperativa.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { api } from "../../../services/api";
 
 interface Cooperativa {
-  id: string;
+  id_cooperativa: number;
   nome: string;
   endereco: string;
 }
@@ -11,23 +12,39 @@ interface Cooperativa {
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (cooperativaId: string) => void;
+  onConfirm: (cooperativaId: number) => void;
 }
-const COOPERATIVAS_CADASTRADAS: Cooperativa[] = [
-  { id: 'c1', nome: 'Cooperativa Recicla Viva', endereco: 'Rua Industrial, 500 - Setor Norte' },
-  { id: 'c2', nome: 'Eco-Cooperativa Oeste', endereco: 'Av. das Nações, 1200 - Distrito Green' },
-  { id: 'c3', nome: 'União dos Catadores SP', endereco: 'Rua do Comércio, 45 - Centro' },
-];
 
 function SelecaoCooperativa({ isOpen, onClose, onConfirm }: Props) {
-  const [selecionada, setSelecionada] = useState<string | null>(null);
+  const [selecionada, setSelecionada] = useState<number | null>(null);
+  const [cooperativas, setCooperativas] = useState<Cooperativa[]>([]);
+  const [carregando, setCarregando] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      carregarCooperativas();
+    }
+  }, [isOpen]);
+
+  const carregarCooperativas = async () => {
+    try {
+      setCarregando(true);
+      const response = await api.get('/cooperativa/listar');
+      setCooperativas(response.data);
+    } catch (error) {
+      console.error('Erro ao carregar cooperativas:', error);
+      alert('Erro ao carregar cooperativas. Tente novamente.');
+    } finally {
+      setCarregando(false);
+    }
+  };
 
   if (!isOpen) return null;
 
   const handleConfirmar = () => {
     if (selecionada) {
       onConfirm(selecionada);
-      setSelecionada(null); 
+      setSelecionada(null);
     }
   };
 
@@ -48,28 +65,38 @@ function SelecaoCooperativa({ isOpen, onClose, onConfirm }: Props) {
             <span>Selecione uma cooperativa cadastrada para continuar.</span>
           </div>
           
-          <div className="coop-lista">
-            {COOPERATIVAS_CADASTRADAS.map((coop) => (
-              <div 
-                key={coop.id} 
-                className={`coop-item-card ${selecionada === coop.id ? 'selecionado' : ''}`}
-                onClick={() => setSelecionada(coop.id)}
-              >
-                <div className="coop-info-box">
-                  <div className="coop-avatar">
-                    {coop.nome.charAt(0)}
+          {carregando ? (
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
+              <Loader2 size={32} className="animate-spin" />
+            </div>
+          ) : cooperativas.length > 0 ? (
+            <div className="coop-lista">
+              {cooperativas.map((coop) => (
+                <div 
+                  key={coop.id_cooperativa} 
+                  className={`coop-item-card ${selecionada === coop.id_cooperativa ? 'selecionado' : ''}`}
+                  onClick={() => setSelecionada(coop.id_cooperativa)}
+                >
+                  <div className="coop-info-box">
+                    <div className="coop-avatar">
+                      {coop.nome.charAt(0)}
+                    </div>
+                    <div className="coop-textos">
+                      <span className="coop-nome-label">{coop.nome}</span>
+                      <span className="coop-endereco-label">{coop.endereco}</span>
+                    </div>
                   </div>
-                  <div className="coop-textos">
-                    <span className="coop-nome-label">{coop.nome}</span>
-                    <span className="coop-endereco-label">{coop.endereco}</span>
+                  <div className={`coop-radio ${selecionada === coop.id_cooperativa ? 'marcado' : ''}`}>
+                    {selecionada === coop.id_cooperativa && <Check size={14} color="white" />}
                   </div>
                 </div>
-                <div className={`coop-radio ${selecionada === coop.id ? 'marcado' : ''}`}>
-                  {selecionada === coop.id && <Check size={14} color="white" />}
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
+              <p>Nenhuma cooperativa cadastrada no momento.</p>
+            </div>
+          )}
         </div>
 
         <div className="coop-footer">

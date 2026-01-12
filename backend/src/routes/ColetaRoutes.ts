@@ -9,6 +9,7 @@ const controller = new ColetaController();
 // ============ MORADOR ============
 router.post("/", authMiddleware, authorize('morador'), (req: Request, res: Response) => controller.create(req, res));
 router.get("/minhas", authMiddleware, authorize('morador'), (req: Request, res: Response) => controller.minhasColetas(req, res));
+router.patch("/:id/cancelar", authMiddleware, authorize('morador'), (req: Request, res: Response) => controller.cancelar(req, res));
 
 // ============ COLETOR ============
 router.get("/disponiveis", authMiddleware, authorize('ecoletor'), (req: Request, res: Response) => controller.coletasDisponiveis(req, res));

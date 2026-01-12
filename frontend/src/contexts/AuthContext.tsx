@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 
 export interface User {
@@ -9,6 +9,10 @@ export interface User {
   telefone?: string;
   cpf?: string;
   cnpj?: string;
+  // IDs específicos do backend
+  id_morador?: number;
+  id_cooperativa?: number;
+  id_ecoletor?: number;
 }
 
 interface AuthContextType {
@@ -18,6 +22,7 @@ interface AuthContextType {
   loading: boolean;
   login: (user: User, token: string) => void;
   logout: () => void;
+  loadUserByType: (tipo: 'morador' | 'ecoletor' | 'cooperativa') => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,38 +31,220 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Função auxiliar para determinar o tipo de usuário baseado na rota
+  const getTipoFromPath = (pathname: string): 'morador' | 'ecoletor' | 'cooperativa' | null => {
+    if (pathname.includes('morador')) return 'morador';
+    if (pathname.includes('coletor')) return 'ecoletor';
+    if (pathname.includes('cooperativa')) return 'cooperativa';
+    return null;
+  };
 
-  // Restaura dados do localStorage ao montar o componente
-  useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
+  // Função auxiliar para obter o ID único do usuário
+  const getUserId = (userData: User): string => {
+    return userData.id_morador?.toString() || 
+           userData.id_ecoletor?.toString() || 
+           userData.id_cooperativa?.toString() || 
+           userData.id || 
+           userData.email || 
+           '';
+  };
 
-    if (storedToken && storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setToken(storedToken);
-        setUser(parsedUser);
-      } catch (error) {
-        console.error('Erro ao restaurar usuário do localStorage:', error);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+  // Função auxiliar para obter todas as sessões ativas de um tipo
+  const getActiveSessions = (tipo: 'morador' | 'ecoletor' | 'cooperativa'): Array<{userId: string, user: User, token: string, lastAccess: number}> => {
+    const sessions: Array<{userId: string, user: User, token: string, lastAccess: number}> = [];
+    
+    // Buscar todas as chaves do localStorage que correspondem ao tipo
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith(`user_${tipo}_`)) {
+        const userId = key.replace(`user_${tipo}_`, '');
+        const tokenKey = `token_${tipo}_${userId}`;
+        const userStr = localStorage.getItem(key);
+        const token = localStorage.getItem(tokenKey);
+        const lastAccessKey = `lastAccess_${tipo}_${userId}`;
+        const lastAccess = parseInt(localStorage.getItem(lastAccessKey) || '0');
+        
+        if (userStr && token) {
+          try {
+            const user = JSON.parse(userStr);
+            sessions.push({ userId, user, token, lastAccess });
+          } catch (error) {
+            console.error('Erro ao parsear sessão:', error);
+          }
+        }
       }
     }
-    setLoading(false);
+    
+    // Ordenar por último acesso (mais recente primeiro)
+    return sessions.sort((a, b) => b.lastAccess - a.lastAccess);
+  };
+
+  // Restaura dados do localStorage ao montar o componente e quando a rota muda
+  useEffect(() => {
+    const loadUser = (pathname?: string) => {
+      // Tentar determinar o tipo baseado na rota atual
+      const tipoEsperado = pathname ? getTipoFromPath(pathname) : null;
+      
+      // Se temos um tipo esperado, tentar carregar a sessão mais recente desse tipo
+      if (tipoEsperado) {
+        const sessions = getActiveSessions(tipoEsperado);
+        if (sessions.length > 0) {
+          // Carregar a sessão mais recente (primeira do array ordenado)
+          const latestSession = sessions[0];
+          try {
+            setToken(latestSession.token);
+            setUser(latestSession.user);
+            // Atualizar timestamp de último acesso
+            const lastAccessKey = `lastAccess_${tipoEsperado}_${latestSession.userId}`;
+            localStorage.setItem(lastAccessKey, Date.now().toString());
+            // Atualizar chaves genéricas para compatibilidade
+            localStorage.setItem('token', latestSession.token);
+            localStorage.setItem('user', JSON.stringify(latestSession.user));
+            setLoading(false);
+            return;
+          } catch (error) {
+            console.error('Erro ao restaurar sessão:', error);
+          }
+        }
+      }
+      
+      // Se não encontrou pelo tipo esperado, tentar chaves genéricas (compatibilidade)
+      let storedToken = localStorage.getItem('token');
+      let storedUser = localStorage.getItem('user');
+
+      // Se não encontrar nas chaves genéricas, tentar qualquer tipo disponível
+      if (!storedToken || !storedUser) {
+        const tipos = ['morador', 'ecoletor', 'cooperativa'];
+        for (const tipo of tipos) {
+          const sessions = getActiveSessions(tipo);
+          if (sessions.length > 0) {
+            const latestSession = sessions[0];
+            storedToken = latestSession.token;
+            storedUser = JSON.stringify(latestSession.user);
+            break;
+          }
+        }
+      }
+
+      if (storedToken && storedUser) {
+        try {
+          const parsedUser = typeof storedUser === 'string' ? JSON.parse(storedUser) : storedUser;
+          setToken(storedToken);
+          setUser(parsedUser);
+        } catch (error) {
+          console.error('Erro ao restaurar usuário do localStorage:', error);
+          setToken(null);
+          setUser(null);
+        }
+      } else {
+        setToken(null);
+        setUser(null);
+      }
+      setLoading(false);
+    };
+
+    // Carregar na montagem inicial
+    loadUser(window.location.pathname);
+
+    // Listener para mudanças no localStorage (quando faz login/logout em outra aba)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key?.startsWith('token_') || e.key?.startsWith('user_') || e.key?.startsWith('lastAccess_') || e.key === 'token' || e.key === 'user') {
+        loadUser(window.location.pathname);
+      }
+    };
+
+    // Listener para mudanças de rota
+    const handleRouteChange = () => {
+      loadUser(window.location.pathname);
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('popstate', handleRouteChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('popstate', handleRouteChange);
+    };
   }, []);
 
   const login = (userData: User, userToken: string) => {
+    // Salvar dados usando chaves específicas por tipo E ID do usuário
+    // Isso permite ter múltiplos usuários do mesmo tipo logados simultaneamente
+    const tipo = userData.tipo;
+    const userId = getUserId(userData);
+    
+    if (!userId) {
+      console.error('Não foi possível obter ID do usuário para salvar sessão');
+      return;
+    }
+    
+    const tokenKey = `token_${tipo}_${userId}`;
+    const userKey = `user_${tipo}_${userId}`;
+    const lastAccessKey = `lastAccess_${tipo}_${userId}`;
+    
+    // Limpar apenas dados antigos do sistema antigo (se existirem)
+    localStorage.removeItem('usuarioLogadoId');
+    localStorage.removeItem('usuarios');
+    
+    // Salvar nas chaves específicas do tipo e ID
     setUser(userData);
     setToken(userToken);
-    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem(tokenKey, userToken);
+    localStorage.setItem(userKey, JSON.stringify(userData));
+    localStorage.setItem(lastAccessKey, Date.now().toString());
+    
+    // Também salvar nas chaves genéricas para compatibilidade
     localStorage.setItem('token', userToken);
+    localStorage.setItem('user', JSON.stringify(userData));
   };
 
+  const loadUserByType = useCallback((tipo: 'morador' | 'ecoletor' | 'cooperativa') => {
+    // Buscar todas as sessões ativas do tipo e carregar a mais recente
+    const sessions = getActiveSessions(tipo);
+    
+    if (sessions.length > 0) {
+      const latestSession = sessions[0];
+      try {
+        setToken(latestSession.token);
+        setUser(latestSession.user);
+        // Atualizar timestamp de último acesso
+        const lastAccessKey = `lastAccess_${tipo}_${latestSession.userId}`;
+        localStorage.setItem(lastAccessKey, Date.now().toString());
+        // Atualizar também as chaves genéricas
+        localStorage.setItem('token', latestSession.token);
+        localStorage.setItem('user', JSON.stringify(latestSession.user));
+      } catch (error) {
+        console.error('Erro ao carregar usuário por tipo:', error);
+      }
+    }
+  }, []); // getActiveSessions não precisa estar nas dependências pois é uma função pura que não muda
+
   const logout = () => {
+    // Limpar apenas os dados do usuário atual (não todos os usuários)
+    const tipoAtual = user?.tipo;
+    const userIdAtual = user ? getUserId(user) : null;
+    
     setUser(null);
     setToken(null);
+    
+    // Limpar chaves genéricas
     localStorage.removeItem('user');
     localStorage.removeItem('token');
+    
+    // Limpar chaves específicas do usuário atual (se houver)
+    if (tipoAtual && userIdAtual) {
+      localStorage.removeItem(`token_${tipoAtual}_${userIdAtual}`);
+      localStorage.removeItem(`user_${tipoAtual}_${userIdAtual}`);
+      localStorage.removeItem(`lastAccess_${tipoAtual}_${userIdAtual}`);
+    }
+    
+    // Limpar dados antigos do sistema antigo (se existirem)
+    localStorage.removeItem('usuarioLogadoId');
+    localStorage.removeItem('usuarios');
+    
+    // Disparar evento para atualizar outros componentes
+    window.dispatchEvent(new Event('storage'));
   };
 
   return (
@@ -69,6 +256,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         loading,
         login,
         logout,
+        loadUserByType,
       }}
     >
       {children}

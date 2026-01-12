@@ -130,6 +130,28 @@ export class ColetaService {
         }
     }
 
+    // Morador cancela coleta
+    async cancelarColeta(id_coleta: number, id_morador: number) {
+        const coleta = await this.coletaRepository.findOne({
+            where: { 
+                id_coleta, 
+                morador: { id_morador } 
+            }
+        });
+
+        if (!coleta) {
+            throw new Error("Coleta não encontrada ou morador não autorizado");
+        }
+
+        // Só pode cancelar se estiver pendente
+        if (coleta.status_coleta !== StatusColeta.PENDENTE) {
+            throw new Error("Apenas coletas pendentes podem ser canceladas");
+        }
+
+        coleta.status_coleta = StatusColeta.CANCELADA;
+        return await this.coletaRepository.save(coleta);
+    }
+
     // Coletor saiu com a coleta
     async iniciarEntrega(id_coleta: number, id_coletor: number) {
         const coleta = await this.coletaRepository.findOne({
@@ -226,8 +248,10 @@ export class ColetaService {
     // Listar coletas pendentes (para coletores)
     async listarDisponiveis() {
         return await this.coletaRepository.find({
-            where: { status_coleta: StatusColeta.PENDENTE },
-            relations: ['morador', 'itens', 'itens.residuo'],
+            where: { 
+                status_coleta: StatusColeta.PENDENTE
+            },
+            relations: ['morador', 'morador.endereco', 'itens', 'itens.residuo'],
             order: { criada_em: 'DESC' }
         });
     }
@@ -236,7 +260,7 @@ export class ColetaService {
     async listarPorMorador(id_morador: number) {
         return await this.coletaRepository.find({
             where: { morador: { id_morador } },
-            relations: ['ecoletor', 'cooperativa', 'itens', 'itens.residuo'],
+            relations: ['morador', 'morador.endereco', 'ecoletor', 'cooperativa', 'itens', 'itens.residuo'],
             order: { criada_em: 'DESC' }
         });
     }
@@ -249,7 +273,7 @@ export class ColetaService {
                 { cooperativa: { id_cooperativa }, status_coleta: StatusColeta.EM_CAMINHO },
                 { cooperativa: { id_cooperativa }, status_coleta: StatusColeta.ENTREGUE }
             ],
-            relations: ['morador', 'ecoletor', 'itens', 'itens.residuo'],
+            relations: ['morador', 'morador.endereco', 'ecoletor', 'itens', 'itens.residuo'],
             order: { atualizada_em: 'DESC' }
         });
     }
@@ -261,7 +285,7 @@ export class ColetaService {
                 { ecoletor: { id_ecoletor: id_coletor }, status_coleta: StatusColeta.ACEITA },
                 { ecoletor: { id_ecoletor: id_coletor }, status_coleta: StatusColeta.EM_CAMINHO }
             ],
-            relations: ['morador', 'cooperativa', 'itens'],
+            relations: ['morador', 'morador.endereco', 'cooperativa', 'itens', 'itens.residuo'],
             order: { atualizada_em: 'DESC' }
         });
     }
@@ -273,7 +297,7 @@ export class ColetaService {
                 { ecoletor: { id_ecoletor: id_coletor }, status_coleta: StatusColeta.ENTREGUE },
                 { ecoletor: { id_ecoletor: id_coletor }, status_coleta: StatusColeta.VALIDADA }
             ],
-            relations: ['morador', 'cooperativa', 'itens', 'itens.residuo'],
+            relations: ['morador', 'morador.endereco', 'cooperativa', 'itens', 'itens.residuo'],
             order: { validada_em: 'DESC', entregue_em: 'DESC' }
         });
     }
@@ -284,7 +308,7 @@ export class ColetaService {
             where: [
                 { cooperativa: { id_cooperativa }, status_coleta: StatusColeta.VALIDADA }
             ],
-            relations: ['morador', 'ecoletor', 'itens', 'itens.residuo'],
+            relations: ['morador', 'morador.endereco', 'ecoletor', 'itens', 'itens.residuo'],
             order: { validada_em: 'DESC' }
         });
     }

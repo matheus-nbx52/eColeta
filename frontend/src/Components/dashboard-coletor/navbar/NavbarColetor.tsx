@@ -9,7 +9,8 @@ function NavbarColetor() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   
-  const nomeExibicao = user?.nome || "Coletor";
+  // Garantir que o nome seja exibido corretamente
+  const nomeExibicao = user?.nome ? user.nome.split(' ')[0] : "Coletor";
 
   const handleSair = () => {
     logout();

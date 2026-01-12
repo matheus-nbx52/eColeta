@@ -144,4 +144,19 @@ export class ColetaController {
             return res.status(500).json({ message: error.message });
         }
     }
+
+    public async cancelar(req: Request, res: Response): Promise<Response> {
+        try {
+            const { id } = req.params;
+            const user = (req as any).user;
+
+            const coleta = await this.coletaService.cancelarColeta(Number(id), user.id);
+            return res.status(200).json({ 
+                message: "Coleta cancelada com sucesso!", 
+                coleta 
+            });
+        } catch (error: any) {
+            return res.status(400).json({ message: error.message });
+        }
+    }
 }

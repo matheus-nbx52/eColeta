@@ -15,27 +15,54 @@ import Login from "../pages/login/Login"
 import PerfilMorador from "../Components/perfilMorador/PerfilMorador"
 import PoliticaPrivacidade from "../pages/termosPolitica/PoliticaPrivacidade"
 import TermosUso from "../pages/termosPolitica/TermosUso"
+import ProtectedRoute from "../Components/ProtectedRoute"
+import AuthRouteListener from "../Components/AuthRouteListener"
 
 function AppRoutes() {
     return (
         <AuthProvider>
             <BrowserRouter>
+                <AuthRouteListener />
                 <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/saibaMais" element={<SaibaMais/>} />
                     <Route path="/cadastro-morador" element={<CadastroMorador />} />
                     <Route path="/cadastro-coletor" element={<CadastroColetor />} />
                     <Route path="/cadastro-cooperativa" element={<CadastroCooperativa />} />
-                    <Route path="/dashboard-coletor" element={<DashboardColetor />} />
-                    <Route path="/dashboard-morador" element={<DashboardMorador/>}/>
-                    <Route path="/perfil" element={<PerfilColetor />} />
-                    <Route path="/dashboard-cooperativa" element={<DashboardCooperativa/>} />
+                    <Route path="/dashboard-coletor" element={
+                        <ProtectedRoute allowedTypes={['ecoletor']}>
+                            <DashboardColetor />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/dashboard-morador" element={
+                        <ProtectedRoute allowedTypes={['morador']}>
+                            <DashboardMorador/>
+                        </ProtectedRoute>
+                    }/>
+                    <Route path="/perfil" element={
+                        <ProtectedRoute allowedTypes={['ecoletor']}>
+                            <PerfilColetor />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/dashboard-cooperativa" element={
+                        <ProtectedRoute allowedTypes={['cooperativa']}>
+                            <DashboardCooperativa/>
+                        </ProtectedRoute>
+                    } />
                     <Route path="/guia-separacao" element={<GuiaSeparacao/>} />
-                    <Route path="/pontos-morador" element={<PontosMorador />} />
+                    <Route path="/pontos-morador" element={
+                        <ProtectedRoute allowedTypes={['morador']}>
+                            <PontosMorador />
+                        </ProtectedRoute>
+                    } />
                     <Route path="/login" element={<Login/>} />
-                    <Route path="/PerfilMorador" element={<PerfilMorador/>} />
+                    <Route path="/PerfilMorador" element={
+                        <ProtectedRoute allowedTypes={['morador']}>
+                            <PerfilMorador/>
+                        </ProtectedRoute>
+                    } />
                     <Route path="/politica-privacidade" element={<PoliticaPrivacidade/>} />
-                     <Route path="/termos-uso" element={<TermosUso/>} />
+                    <Route path="/termos-uso" element={<TermosUso/>} />
                    
                 </Routes>
             </BrowserRouter>
