@@ -104,7 +104,7 @@ export default function Login() {
         <button className="btn-flat">Esqueceu a senha?</button>
       </div>
       <div className="register-card">
-        <p> Não tem uma conta? <span className="register-link-container" onClick={() => navigate('/cadastro-morador')}>
+        <p> Não tem uma conta? <span className="register-link-container" onClick={() => navigate('/')}>
             <strong className="text-bold"> Cadastre-se</strong>
           </span>
           </p>
