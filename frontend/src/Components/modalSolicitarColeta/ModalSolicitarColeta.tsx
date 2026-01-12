@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import {
   FileText, CupSoda, Box, Wine, Smartphone,
-  Droplets, Clock, Calendar as CalendarIcon
+  Droplets, Clock, Calendar as CalendarIcon,
 } from 'lucide-react';
 import './ModalSolicitarColeta.css';
 import Swal from "sweetalert2";
+import { FaMapMarkerAlt } from "react-icons/fa";
 import { coletasService } from '../../services/coletasService';
 
 interface ModalProps {
@@ -14,11 +15,6 @@ interface ModalProps {
 }
 
 export default function ModalSolicitarColeta({ isOpen, onClose, onSuccess }: ModalProps) {
-  const [cep, setCep] = useState('');
-  const [rua, setRua] = useState('');
-  const [bairro, setBairro] = useState('');
-  const [cidade, setCidade] = useState('');
-  const [estado, setEstado] = useState('');
   const [peso, setPeso] = useState('');
   const [dataColeta, setDataColeta] = useState('');
   const [horario, setHorario] = useState('');
@@ -27,10 +23,10 @@ export default function ModalSolicitarColeta({ isOpen, onClose, onSuccess }: Mod
   const [carregando, setCarregando] = useState(false);
 
   const handleSubmit = async () => {
-    if (!cep || !rua || !peso || !dataColeta || !horario || materiaisSelecionados.length === 0) {
+    if (!peso || !dataColeta || !horario || materiaisSelecionados.length === 0) {
       Swal.fire({
         title: 'Atenção!',
-        text: 'Por favor, preencha todos os campos e selecione pelo menos um tipo de material.',
+        text: 'Por favor, preencha o peso, data, horário e selecione pelo menos um material.',
         icon: 'warning',
         confirmButtonText: 'OK'
       });
@@ -39,7 +35,7 @@ export default function ModalSolicitarColeta({ isOpen, onClose, onSuccess }: Mod
 
     try {
       setCarregando(true);
-      
+
       // Mapear nomes de materiais para os IDs do backend
       const mapaResiduo: { [key: string]: number } = {
         'Papel': 1,
@@ -66,22 +62,17 @@ export default function ModalSolicitarColeta({ isOpen, onClose, onSuccess }: Mod
       };
 
       await coletasService.criarColeta(payload);
-      
+
       // Limpar formulário
-      setCep('');
-      setRua('');
-      setBairro('');
-      setCidade('');
-      setEstado('');
       setPeso('');
       setDataColeta('');
       setHorario('');
       setObservacoes('');
       setMateriaisSelecionados([]);
-      
+
       // Fechar modal imediatamente
       onClose();
-      
+
       // Mostrar mensagem de sucesso
       Swal.fire({
         title: 'Solicitação Enviada!',
@@ -104,24 +95,6 @@ export default function ModalSolicitarColeta({ isOpen, onClose, onSuccess }: Mod
     }
   };
 
-
-  const handleCepBlur = async () => {
-    const cleanCep = cep.replace(/\D/g, '');
-    if (cleanCep.length === 8) {
-      try {
-        const res = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
-        const data = await res.json();
-        if (!data.erro) {
-          setRua(data.logradouro);
-          setBairro(data.bairro);
-          setCidade(data.localidade);
-          setEstado(data.uf);
-        }
-      } catch (error) {
-        console.error('Erro no CEP', error);
-      }
-    }
-  };
 
   if (!isOpen) return null;
 
@@ -147,49 +120,15 @@ export default function ModalSolicitarColeta({ isOpen, onClose, onSuccess }: Mod
       <div className="modal-container-refinado">
         <div className="modal-scroll-area">
 
-          <div className="grid-duplo-endereco">
-            <div className="campo-grupo">
-              <label className="label-teal">CEP</label>
-              <input
-                type="text" placeholder='00000-000'
-                className="input-custom"
-                value={cep}
-                onChange={(e) => setCep(e.target.value)}
-                onBlur={handleCepBlur}
-              />
+          <div className="alerta-endereco-info">
+            <div className="alerta-header">
+              <FaMapMarkerAlt size={18} />
+              <span>Local da Coleta</span>
             </div>
-
-            <div className="campo-grupo">
-              <label className="label-teal">Estado</label>
-              <input type="text" className="input-custom" value={estado} readOnly />
-            </div>
-          </div>
-
-          <div className="campo-grupo">
-            <label className="label-teal">Rua e Número</label>
-            <input
-              type="text"
-              className="input-custom"
-              value={rua}
-              onChange={(e) => setRua(e.target.value)}
-            />
-          </div>
-
-          <div className="grid-duplo-endereco">
-            <div className="campo-grupo">
-              <label className="label-teal">Bairro</label>
-              <input
-                type="text"
-                className="input-custom"
-                value={bairro}
-                onChange={(e) => setBairro(e.target.value)}
-              />
-            </div>
-
-            <div className="campo-grupo">
-              <label className="label-teal">Cidade</label>
-              <input type="text" className="input-custom" value={cidade} readOnly />
-            </div>
+            <p>
+              A coleta será realizada automaticamente no <strong>endereço registrado no seu cadastro</strong>.
+              Certifique-se de que seus dados estão atualizados no seu perfil.
+            </p>
           </div>
 
           <div className="campo-grupo">
@@ -246,7 +185,7 @@ export default function ModalSolicitarColeta({ isOpen, onClose, onSuccess }: Mod
                 disabled={carregando}
               >
                 <option value="">Selecione</option>
-                {["08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00"]
+                {["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"]
                   .map(h => <option key={h} value={h}>{h}</option>)}
               </select>
               <Clock size={18} className="icon-absolute" />
