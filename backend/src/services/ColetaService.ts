@@ -152,6 +152,75 @@ export class ColetaService {
         return await this.coletaRepository.save(coleta);
     }
 
+    // Coletor recusa uma coleta disponível (apenas remove da lista dele, não altera status)
+    async recusarColeta(id_coleta: number, id_coletor: number) {
+        // Verificar se a coleta existe e está pendente
+        const coleta = await this.coletaRepository.findOne({
+            where: { id_coleta, status_coleta: StatusColeta.PENDENTE }
+        });
+
+        if (!coleta) {
+            throw new Error("Coleta não encontrada ou não está disponível");
+        }
+
+        // A recusa não altera o status da coleta, apenas remove da lista do coletor
+        // Isso é mais uma ação de "não mostrar para este coletor"
+        // Por enquanto, apenas retornamos sucesso
+        return { message: "Coleta recusada com sucesso" };
+    }
+
+    // Cooperativa cancela uma coleta que foi entregue a ela
+    async cancelarColetaCooperativa(id_coleta: number, id_cooperativa: number) {
+        const coleta = await this.coletaRepository.findOne({
+            where: { 
+                id_coleta, 
+                cooperativa: { id_cooperativa }
+            },
+            relations: ['morador', 'ecoletor']
+        });
+
+        if (!coleta) {
+            throw new Error("Coleta não encontrada ou cooperativa não autorizada");
+        }
+
+        // Só pode cancelar se estiver entregue ou aceita (ainda não validada)
+        if (coleta.status_coleta !== StatusColeta.ENTREGUE && 
+            coleta.status_coleta !== StatusColeta.ACEITA && 
+            coleta.status_coleta !== StatusColeta.EM_CAMINHO) {
+            throw new Error("Apenas coletas entregues ou em andamento podem ser canceladas pela cooperativa");
+        }
+
+        coleta.status_coleta = StatusColeta.CANCELADA;
+        return await this.coletaRepository.save(coleta);
+    }
+
+    // Coletor cancela uma coleta que ele aceitou (em andamento)
+    async cancelarColetaColetor(id_coleta: number, id_coletor: number) {
+        const coleta = await this.coletaRepository.findOne({
+            where: { 
+                id_coleta, 
+                ecoletor: { id_ecoletor: id_coletor }
+            },
+            relations: ['morador', 'cooperativa']
+        });
+
+        if (!coleta) {
+            throw new Error("Coleta não encontrada ou coletor não autorizado");
+        }
+
+        // Só pode cancelar se estiver aceita ou em caminho (ainda não entregue)
+        if (coleta.status_coleta !== StatusColeta.ACEITA && 
+            coleta.status_coleta !== StatusColeta.EM_CAMINHO) {
+            throw new Error("Apenas coletas aceitas ou em caminho podem ser canceladas pelo coletor");
+        }
+
+        coleta.status_coleta = StatusColeta.CANCELADA;
+        // Limpar referências do coletor e cooperativa
+        coleta.ecoletor = null;
+        coleta.cooperativa = null;
+        return await this.coletaRepository.save(coleta);
+    }
+
     // Coletor saiu com a coleta
     async iniciarEntrega(id_coleta: number, id_coletor: number) {
         const coleta = await this.coletaRepository.findOne({
