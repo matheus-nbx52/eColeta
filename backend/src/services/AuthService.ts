@@ -5,9 +5,21 @@ import { MoradorModel } from "../models/MoradorModel";
 import { EcoletorModel } from "../models/EcoletorModel";
 import { CooperativaModel } from "../models/CooperativaModel";
 
-
 export class AuthService {
 
+    async verificarEmailGlobal(email: string): Promise<boolean> {
+        const repoMorador = AppDataSource.getRepository(MoradorModel);
+        const repoCoop = AppDataSource.getRepository(CooperativaModel);
+        const repoEco = AppDataSource.getRepository(EcoletorModel);
+
+        const [morador, coop, ecoletor] = await Promise.all([
+            repoMorador.findOneBy({ email }),
+            repoCoop.findOneBy({ email }),
+            repoEco.findOneBy({ email })
+        ]);
+
+        return !!(morador || coop || ecoletor);
+    }
 
     private generateToken(payload: object): string {
         const secret = process.env.JWT_SECRET;
@@ -30,14 +42,12 @@ export class AuthService {
             throw new Error("Email ou senha inválidos.");
         }
 
-        // implementação do hash
         const senhaValida = await bcrypt.compare(senhaDigitada, user.senha)
 
         if (!senhaValida) {
             throw new Error("Email ou senha inválidos.");
         }
 
-        // Gerar token JWT
         const token = this.generateToken({
             id: user.id_morador,
             tipo: 'morador',
@@ -78,17 +88,17 @@ export class AuthService {
             tipo: 'cooperativa'
         });
 
-        //remove a senha do retorno da requisição
         const { senha, ...userSemSenha } = user;
 
         return { 
             token, 
             user: { 
-                ...userSemSenha, // Retorna tudo MENOS a senha
+                ...userSemSenha, 
                 tipo: "cooperativa" 
             }
         }
     }
+
     // Autenticação com token ecoletor
     async loginEcoletor(email: string, senhaDigitada: string) {
         const repo = AppDataSource.getRepository(EcoletorModel);
@@ -108,7 +118,6 @@ export class AuthService {
             throw new Error("Email ou senha inválidos.");
         }
 
-        // remove senha da coop vinculada
         if (user.cooperativa) {
             delete (user.cooperativa as any).senha;
         }
