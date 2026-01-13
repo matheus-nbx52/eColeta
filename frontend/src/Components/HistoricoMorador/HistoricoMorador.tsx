@@ -8,10 +8,11 @@ import Swal from 'sweetalert2';
 interface Props {
   filtroStatus?: 'Pendente' | 'Em Coleta' | 'Coletado';
   onColetasChange?: () => void;
+  refreshTrigger?: number;
 }
 
-const HistoricoMorador = ({ filtroStatus, onColetasChange }: Props) => {
-  const [historico, setHistorico] = useState<any[]>([]);
+const HistoricoMorador = ({ filtroStatus, onColetasChange, refreshTrigger }: Props) => {
+  const [todasColetas, setTodasColetas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const carregarDados = async () => {
@@ -49,20 +50,20 @@ const HistoricoMorador = ({ filtroStatus, onColetasChange }: Props) => {
           };
         });
 
-      let lista = coletasMapeadas;
-
-      if (filtroStatus) {
-        lista = coletasMapeadas.filter(c => c.status === filtroStatus);
-      }
-
-      setHistorico(lista.reverse());
+      // Armazenar todas as coletas (sem filtro)
+      setTodasColetas(coletasMapeadas.reverse());
     } catch (error) {
       console.error('Erro ao carregar histórico:', error);
-      setHistorico([]);
+      setTodasColetas([]);
     } finally {
       setLoading(false);
     }
   };
+
+  // Filtrar localmente baseado no filtroStatus (sem recarregar da API)
+  const historico = filtroStatus 
+    ? todasColetas.filter(c => c.status === filtroStatus)
+    : todasColetas;
 
   const handleCancelar = async (id: string) => {
     const result = await Swal.fire({
@@ -88,7 +89,9 @@ const HistoricoMorador = ({ filtroStatus, onColetasChange }: Props) => {
         confirmButtonText: 'OK'
       }).then(() => {
         carregarDados();
-        if (onColetasChange) onColetasChange();
+        if (onColetasChange) {
+          onColetasChange();
+        }
       });
     } catch (error: any) {
       Swal.fire({
@@ -100,9 +103,10 @@ const HistoricoMorador = ({ filtroStatus, onColetasChange }: Props) => {
     }
   };
 
+  // Carregar dados na montagem e quando refreshTrigger mudar
   useEffect(() => {
     carregarDados();
-  }, [filtroStatus]);
+  }, [refreshTrigger]);
 
   const handleInfo = (e: React.MouseEvent, status: string) => {
     e.stopPropagation();
@@ -144,8 +148,12 @@ const HistoricoMorador = ({ filtroStatus, onColetasChange }: Props) => {
       <h2 className={`titulo-secao ${filtroStatus?.toLowerCase().replace(/\s+/g, '-')}`}>
         {filtroStatus}
       </h2>
-      {historico.length > 0 ? (
-        <div className="lista-cards">
+      {loading && historico.length === 0 ? (
+        <div className="sem-dados">
+          <p>Carregando histórico...</p>
+        </div>
+      ) : historico.length > 0 ? (
+        <div className="lista-cards animar-entrada">
           {historico.map((coleta) => (
             <div className="coleta-card" key={coleta.id}>
               <div className={`accent-bar ${coleta.status.toLowerCase().replace(/\s+/g, '-')}`} />

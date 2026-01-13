@@ -82,6 +82,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Restaura dados do localStorage ao montar o componente e quando a rota muda
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout | null = null;
+    
     const loadUser = (pathname?: string) => {
       // Tentar determinar o tipo baseado na rota atual
       const tipoEsperado = pathname ? getTipoFromPath(pathname) : null;
@@ -92,6 +94,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (sessions.length > 0) {
           // Carregar a sessão mais recente (primeira do array ordenado)
           const latestSession = sessions[0];
+          
           try {
             setToken(latestSession.token);
             setUser(latestSession.user);
@@ -148,25 +151,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     loadUser(window.location.pathname);
 
     // Listener para mudanças no localStorage (quando faz login/logout em outra aba)
+    // Usar debounce para evitar múltiplas chamadas
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key?.startsWith('token_') || e.key?.startsWith('user_') || e.key?.startsWith('lastAccess_') || e.key === 'token' || e.key === 'user') {
-        loadUser(window.location.pathname);
+      // Ignorar eventos que não são relevantes
+      if (!e.key || (!e.key.startsWith('token_') && !e.key.startsWith('user_') && e.key !== 'token' && e.key !== 'user')) {
+        return;
       }
-    };
-
-    // Listener para mudanças de rota
-    const handleRouteChange = () => {
-      loadUser(window.location.pathname);
+      
+      // Limpar timeout anterior
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      
+      // Debounce de 500ms para evitar múltiplas atualizações
+      timeoutId = setTimeout(() => {
+        loadUser(window.location.pathname);
+      }, 500);
     };
 
     window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('popstate', handleRouteChange);
     
     return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('popstate', handleRouteChange);
     };
-  }, []);
+  }, []); // Executar apenas uma vez na montagem
 
   const login = (userData: User, userToken: string) => {
     // Salvar dados usando chaves específicas por tipo E ID do usuário
@@ -205,6 +216,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     
     if (sessions.length > 0) {
       const latestSession = sessions[0];
+      
+      // Verificar se já está carregado o mesmo usuário (evitar atualizações desnecessárias)
+      // Usar uma verificação mais segura sem depender diretamente do estado
+      const currentToken = token;
+      const currentUser = user;
+      
+      if (currentUser && currentUser.tipo === tipo) {
+        const currentUserId = getUserId(currentUser);
+        if (currentUserId === latestSession.userId && currentToken === latestSession.token) {
+          // Já está carregado, apenas atualizar timestamp silenciosamente
+          const lastAccessKey = `lastAccess_${tipo}_${latestSession.userId}`;
+          localStorage.setItem(lastAccessKey, Date.now().toString());
+          return;
+        }
+      }
+      
       try {
         setToken(latestSession.token);
         setUser(latestSession.user);
@@ -218,7 +245,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         console.error('Erro ao carregar usuário por tipo:', error);
       }
     }
-  }, []); // getActiveSessions não precisa estar nas dependências pois é uma função pura que não muda
+  }, [user, token]);
 
   const logout = () => {
     // Limpar apenas os dados do usuário atual (não todos os usuários)

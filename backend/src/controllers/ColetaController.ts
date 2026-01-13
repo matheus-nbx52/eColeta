@@ -159,4 +159,46 @@ export class ColetaController {
             return res.status(400).json({ message: error.message });
         }
     }
+
+    public async recusar(req: Request, res: Response): Promise<Response> {
+        try {
+            const { id } = req.params;
+            const user = (req as any).user;
+
+            const result = await this.coletaService.recusarColeta(Number(id), user.id);
+            return res.status(200).json(result);
+        } catch (error: any) {
+            return res.status(400).json({ message: error.message });
+        }
+    }
+
+    public async cancelarColetor(req: Request, res: Response): Promise<Response> {
+        try {
+            const { id } = req.params;
+            const user = (req as any).user;
+
+            const coleta = await this.coletaService.cancelarColetaColetor(Number(id), user.id);
+            return res.status(200).json({ 
+                message: "Coleta cancelada com sucesso!", 
+                coleta 
+            });
+        } catch (error: any) {
+            return res.status(400).json({ message: error.message });
+        }
+    }
+
+    public async cancelarCooperativa(req: Request, res: Response): Promise<Response> {
+        try {
+            const { id } = req.params;
+            const user = (req as any).user;
+
+            const coleta = await this.coletaService.cancelarColetaCooperativa(Number(id), user.id);
+            return res.status(200).json({ 
+                message: "Coleta cancelada com sucesso!", 
+                coleta 
+            });
+        } catch (error: any) {
+            return res.status(400).json({ message: error.message });
+        }
+    }
 }

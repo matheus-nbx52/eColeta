@@ -13,6 +13,7 @@ export default function DashboardContentMorador() {
     const [filtroAtivo, setFiltroAtivo] = useState<'Pendente' | 'Em Coleta' | 'Coletado'>('Pendente');
     const navigate = useNavigate(); 
     const [loading, setLoading] = useState(true);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
     
     const [stats, setStats] = useState({ 
         pendentes: 0, 
@@ -72,11 +73,15 @@ export default function DashboardContentMorador() {
 
     useEffect(() => {
         carregarEstatisticas();
+        // Atualizar a cada 60 segundos (mesmo padrão do coletor)
+        const interval = setInterval(carregarEstatisticas, 60000);
+        return () => clearInterval(interval);
     }, []);
 
    const handleFecharModal = () => {
     setIsModalOpen(false);
-    carregarEstatisticas(); 
+    carregarEstatisticas();
+    setRefreshTrigger(prev => prev + 1); // Forçar refresh do histórico
     setFiltroAtivo('Pendente');
 };
 
@@ -165,7 +170,14 @@ export default function DashboardContentMorador() {
                 </div>
             </div>
 
-            <HistoricoMorador filtroStatus={filtroAtivo} onColetasChange={carregarEstatisticas} />
+            <HistoricoMorador 
+                filtroStatus={filtroAtivo} 
+                onColetasChange={() => {
+                    carregarEstatisticas();
+                    setRefreshTrigger(prev => prev + 1);
+                }}
+                refreshTrigger={refreshTrigger}
+            />
 
         <ModalSolicitarColeta 
           isOpen={isModalOpen} 

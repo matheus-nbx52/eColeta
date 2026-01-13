@@ -1,10 +1,9 @@
 import "./DashBoardContentCooperativa.css";
 import {
   Clock, MapPin, Calendar,
-  Check, Scale, X, History, User, Truck, AlertTriangle,
+  Check, Scale, X, History, User, Truck,
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { api } from "../../services/api";
 import { coletasService } from "../../services/coletasService";
 import type { ColetaResponse } from "../../types/coleta";
 import Swal from "sweetalert2";
@@ -35,13 +34,11 @@ export default function DashBoardContentCooperativa() {
   });
 
   const [modalFinalizar, setModalFinalizar] = useState<ItemColetaExtendida | null>(null);
-  const [modalRecusar, setModalRecusar] = useState<ItemColetaExtendida | null>(null);
   const [pesoFinal, setPesoFinal] = useState("");
-  const [motivoRecusa, setMotivoRecusa] = useState("");
 
   const carregarDados = async () => {
-    setLoading(true);
     try {
+      setLoading(true);
       // Buscar coletas em andamento
       const coletasAndamento = await coletasService.listarParaCooperativa();
 
@@ -102,57 +99,153 @@ export default function DashBoardContentCooperativa() {
   };
 
   useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+    let lastLoadTime = 0;
+    const MIN_TIME_BETWEEN_LOADS = 5000; // Mínimo de 5 segundos entre carregamentos
+    let isMounted = true;
+    
+    const carregarComVerificacao = () => {
+      if (!isMounted) return;
+      
+      const now = Date.now();
+      const timeSinceLastLoad = now - lastLoadTime;
+      
+      // Se passou menos de 5 segundos desde o último carregamento, aguardar
+      if (timeSinceLastLoad < MIN_TIME_BETWEEN_LOADS) {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+        timeoutId = setTimeout(() => {
+          if (isMounted) {
+            lastLoadTime = Date.now();
+            carregarDados();
+          }
+        }, MIN_TIME_BETWEEN_LOADS - timeSinceLastLoad);
+        return;
+      }
+      
+      lastLoadTime = Date.now();
+      carregarDados();
+    };
+    
+    // Carregar inicialmente
     carregarDados();
-    // Aumentar intervalo para 60 segundos para evitar piscar na tela
-    const interval = setInterval(carregarDados, 60000);
-    return () => clearInterval(interval);
-  }, []);
+    lastLoadTime = Date.now();
+    
+    // Intervalo de atualização a cada 60 segundos
+    intervalId = setInterval(() => {
+      if (isMounted) {
+        carregarComVerificacao();
+      }
+    }, 60000);
+    
+    // Recarregar dados quando a aba volta a ficar visível (com debounce)
+    const handleVisibilityChange = () => {
+      if (!document.hidden && isMounted) {
+        // Aguardar um pouco antes de recarregar para evitar múltiplos recarregamentos
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+        timeoutId = setTimeout(() => {
+          if (isMounted) {
+            carregarComVerificacao();
+          }
+        }, 2000); // Aumentar para 2 segundos
+      }
+    };
+    
+    // Recarregar dados quando a janela recebe foco (com debounce)
+    const handleFocus = () => {
+      if (isMounted) {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+        timeoutId = setTimeout(() => {
+          if (isMounted) {
+            carregarComVerificacao();
+          }
+        }, 2000); // Aumentar para 2 segundos
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      isMounted = false;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []); // Array vazio - executar apenas uma vez
 
-  const processarAcao = async (status: 'Coletado' | 'Recusado') => {
-    const itemAlvo = status === 'Coletado' ? modalFinalizar : modalRecusar;
-    if (!itemAlvo) return;
+  const handleCancelarColeta = async (id: string) => {
+    const result = await Swal.fire({
+      title: 'Cancelar Coleta',
+      text: 'Deseja realmente cancelar esta coleta? Esta ação não pode ser desfeita.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sim, cancelar',
+      cancelButtonText: 'Não'
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
-      if (status === 'Coletado') {
-        if (!pesoFinal || parseFloat(pesoFinal) <= 0) {
-          Swal.fire({
-            title: 'Atenção!',
-            text: 'Informe um peso válido.',
-            icon: 'warning',
-            confirmButtonText: 'OK'
-          });
-          return;
-        }
+      await coletasService.cancelarColetaCooperativa(parseInt(id));
+      
+      Swal.fire({
+        title: 'Cancelada!',
+        text: 'A coleta foi cancelada com sucesso.',
+        icon: 'success',
+        confirmButtonText: 'OK'
+      }).then(() => {
+        carregarDados();
+      });
+    } catch (error: any) {
+      Swal.fire({
+        title: 'Erro!',
+        text: error.response?.data?.message || 'Não foi possível cancelar a coleta.',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+    }
+  };
 
-        await coletasService.validarColeta(parseInt(itemAlvo.id), parseFloat(pesoFinal));
+  const processarAcao = async () => {
+    if (!modalFinalizar) return;
 
-        Swal.fire({
-          title: 'Sucesso!',
-          text: 'Coleta validada e pontos creditados!',
-          icon: 'success',
-          confirmButtonText: 'OK'
-        }).then(() => {
-          setModalFinalizar(null);
-          setModalRecusar(null);
-          setPesoFinal("");
-          setMotivoRecusa("");
-          carregarDados();
-        });
-      } else {
-        // TODO: Implementar recusa no backend se necessário
+    try {
+      if (!pesoFinal || parseFloat(pesoFinal) <= 0) {
         Swal.fire({
           title: 'Atenção!',
-          text: 'Funcionalidade de recusa será implementada em breve.',
-          icon: 'info',
+          text: 'Informe um peso válido.',
+          icon: 'warning',
           confirmButtonText: 'OK'
-        }).then(() => {
-          setModalFinalizar(null);
-          setModalRecusar(null);
-          setPesoFinal("");
-          setMotivoRecusa("");
-          carregarDados();
         });
+        return;
       }
+
+      await coletasService.validarColeta(parseInt(modalFinalizar.id), parseFloat(pesoFinal));
+
+      Swal.fire({
+        title: 'Sucesso!',
+        text: 'Coleta validada e pontos creditados!',
+        icon: 'success',
+        confirmButtonText: 'OK'
+      }).then(() => {
+        setModalFinalizar(null);
+        setPesoFinal("");
+        carregarDados();
+      });
     } catch (error: any) {
       Swal.fire({
         title: 'Erro!',
@@ -220,10 +313,15 @@ export default function DashBoardContentCooperativa() {
                     {item.statusBackend === 'Entregue_Coop' || item.statusBackend === 'ENTREGUE' || item.statusBackend === 'Entregue' ? (
                       <>
                         <button className="btn-receber" onClick={() => setModalFinalizar(item)}>Recebida <Check size={18}/></button>
-                        <button className="btn-recusar-link" onClick={() => setModalRecusar(item)}>Recusar Material</button>
+                        <button className="btn-cancelar-coop" onClick={() => handleCancelarColeta(item.id)}>Cancelar Coleta</button>
                       </>
                     ) : (
-                      <span className="badge-status azul">Aguardando coletor...</span>
+                      <>
+                        <span className="badge-status azul">Aguardando coletor...</span>
+                        {(item.statusBackend === 'Aceito' || item.statusBackend === 'A Caminho' || item.statusBackend === 'EM_CAMINHO') && (
+                          <button className="btn-cancelar-coop" onClick={() => handleCancelarColeta(item.id)}>Cancelar Coleta</button>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -242,9 +340,9 @@ export default function DashBoardContentCooperativa() {
                         {item.status === 'Recusado' ? 'RECUSADA' : 'CONCLUÍDA'}
                       </span>
                     </div>
-                    {item.status === 'Coletado' ? (
+                    {item.status === 'Coletado' && (
                       <p className="peso-validado"><Scale size={16} /> Peso: <strong>{item.peso} kg</strong></p>
-                    ) : <div className="motivo-info"><AlertTriangle size={16} /> {item.motivoRecusa}</div>}
+                    )}
                     <p className="txt-sub">Morador: {item.moradorNome} | Coletor: {item.coletorNome}</p>
                   </div>
                 </div>
@@ -267,32 +365,12 @@ export default function DashBoardContentCooperativa() {
                 type="number" step="0.1" value={pesoFinal} onChange={(e) => setPesoFinal(e.target.value)} placeholder="0.0 kg" autoFocus />
             </div>
             <div className="modal-footer-recusa">
-              <button className="btn-receber" style={{ width: '100%' }} onClick={() => processarAcao('Coletado')}>Confirmar Recebimento</button>
+              <button className="btn-receber" style={{ width: '100%' }} onClick={processarAcao}>Confirmar Recebimento</button>
             </div>
           </div>
         </div>
       )}
 
-      {modalRecusar && (
-        <div className="modal-overlay">
-          <div className="modal-container-recusa">
-            <div className="modal-header-recusa">
-              <h3>Motivo da Recusa</h3>
-              <button className="fechar-x" onClick={() => setModalRecusar(null)}><X /></button>
-            </div>
-            <textarea
-              className="input-area-motivo"
-              value={motivoRecusa}
-              onChange={(e) => setMotivoRecusa(e.target.value)}
-              placeholder="Descreva o motivo..."
-            />
-            <div className="modal-footer-recusa">
-              <button className="btn-confirmar-recusa-v2" onClick={() => processarAcao('Recusado')}>Confirmar Recusa</button>
-              <button className="btn-cancelar-v2" onClick={() => setModalRecusar(null)}>Cancelar</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
