@@ -18,14 +18,14 @@ const HistoricoMorador = ({ filtroStatus, onColetasChange }: Props) => {
     try {
       setLoading(true);
       const coletas = await coletasService.listarPorMorador();
-      
+
       const coletasMapeadas = coletas
         .filter((coleta: ColetaResponse) => coleta.status_coleta !== 'Cancelado' && coleta.status_coleta !== 'CANCELADA')
         .map((coleta: ColetaResponse) => {
           const dataAgendada = new Date(coleta.data_agendada);
           const materiais = coleta.itens?.map((item: any) => item.residuo?.nome || 'Material').join(', ') || 'Material';
           const quantidadeTotal = coleta.itens?.reduce((acc: number, item: any) => acc + (item.quantidade_estimada || 0), 0) || 0;
-          
+
           // Mapear status do backend para o formato do frontend
           let status: 'Pendente' | 'Em Coleta' | 'Coletado' = 'Pendente';
           if (coleta.status_coleta === 'Pendente') {
@@ -80,7 +80,7 @@ const HistoricoMorador = ({ filtroStatus, onColetasChange }: Props) => {
 
     try {
       await coletasService.cancelarColeta(parseInt(id));
-      
+
       Swal.fire({
         title: 'Cancelada!',
         text: 'A coleta foi cancelada com sucesso.',
@@ -102,11 +102,33 @@ const HistoricoMorador = ({ filtroStatus, onColetasChange }: Props) => {
 
   useEffect(() => {
     carregarDados();
-  }, [filtroStatus]); 
+  }, [filtroStatus]);
 
-  const handleInfo = (e: React.MouseEvent) => {
+  const handleInfo = (e: React.MouseEvent, status: string) => {
     e.stopPropagation();
-    alert('Sua coleta mudará de status assim que um coletor aceitar.');
+
+    if (status === 'Pendente') {
+      Swal.fire({
+        title: 'Status: Pendente',
+        text: 'Sua solicitação foi recebida! Estamos aguardando que um coletor aceite realizar a sua coleta.',
+        icon: 'info',
+        
+      });
+    } else if (status === 'Em Coleta') {
+      Swal.fire({
+        title: 'Status: Em Coleta',
+        text: 'Um coletor já aceitou sua solicitação! Ele está organizando a rota para buscar seus materiais.',
+        icon: 'success',
+
+      });
+    } else if (status === 'Coletado') {
+      Swal.fire({
+        title: 'Status: Coletado',
+        text: 'Essa coleta já foi finalizada e os materiais foram entregues.',
+        icon: 'success',
+        
+      });
+    }
   };
 
   if (loading) {
@@ -118,15 +140,15 @@ const HistoricoMorador = ({ filtroStatus, onColetasChange }: Props) => {
   }
 
   return (
-     <div className="historico-wrapper" id="secao-historico">
-        <h2 className={`titulo-secao ${filtroStatus?.toLowerCase().replace(/\s+/g, '-')}`}>
-       {filtroStatus}
+    <div className="historico-wrapper" id="secao-historico">
+      <h2 className={`titulo-secao ${filtroStatus?.toLowerCase().replace(/\s+/g, '-')}`}>
+        {filtroStatus}
       </h2>
       {historico.length > 0 ? (
         <div className="lista-cards">
           {historico.map((coleta) => (
             <div className="coleta-card" key={coleta.id}>
-              <div className="accent-bar" />
+              <div className={`accent-bar ${coleta.status.toLowerCase().replace(/\s+/g, '-')}`} />
 
               <div className="card-body">
                 <div className="info-section">
@@ -147,8 +169,8 @@ const HistoricoMorador = ({ filtroStatus, onColetasChange }: Props) => {
                     </div>
 
                     <div
-                      className="status-badge-inline"
-                      onClick={handleInfo}
+                      className={`status-badge-inline ${coleta.status.toLowerCase().replace(/\s+/g, '-')}`}
+                      onClick={(e) => handleInfo(e, coleta.status)}
                       style={{ cursor: 'pointer' }}
                     >
                       {coleta.status}

@@ -44,9 +44,46 @@
   border: 1px solid #f1f5f9;
 }
 
+
 .accent-bar {
   width: 8px;
+ 
+}
+
+
+.accent-bar.pendente {
   background: linear-gradient(to bottom, #f2994a, #eb5757);
+}
+
+.accent-bar.em-coleta {
+  background: linear-gradient(to bottom, #4299e1, #3182ce);
+}
+
+.accent-bar.coletado {
+  background: linear-gradient(to bottom, #48bb78, #38a169);
+}
+
+.status-badge-inline.em-coleta {
+  background-color: #E1F5FE; 
+  color: #0288D1;            
+}
+
+.status-badge-inline.em-coleta .info-icon-status {
+  color: #0288D1;
+}
+
+.status-badge-inline.coletado {
+  background-color: #E8F5E9;
+  color: #2E7D32;            
+}
+
+.status-badge-inline.coletado .info-icon-status {
+  color: #2E7D32;
+}
+
+.status-badge-inline.pendente {
+  background-color: #FFF4E5;
+  color: #F2994A;
 }
 
 .card-body {
