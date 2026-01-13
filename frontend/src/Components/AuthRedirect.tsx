@@ -22,7 +22,6 @@ export default function AuthRedirect({ redirectTo }: AuthRedirectProps) {
     }
   }, [user, loading, navigate, redirectTo]);
 
-  // Mostrar loading enquanto verifica, evitando flash da página
   return (
     <div style={{ 
       display: 'flex', 

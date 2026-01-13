@@ -86,5 +86,4 @@ export const coletasService = {
   }
 };
 
-// Re-export para garantir compatibilidade
 export type { ColetaResponse } from '../types/coleta';

@@ -4,10 +4,7 @@ export const api = axios.create({
     baseURL: 'http://localhost:3000',
 });
 
-// Função para obter o token correto baseado na rota atual
-// Isso garante que cada aba use o token do seu próprio usuário
 const getToken = (): string | null => {
-    // Determinar o tipo esperado baseado na rota atual
     const pathname = window.location.pathname;
     let tipoEsperado: 'morador' | 'ecoletor' | 'cooperativa' | null = null;
     
@@ -15,9 +12,7 @@ const getToken = (): string | null => {
     else if (pathname.includes('coletor')) tipoEsperado = 'ecoletor';
     else if (pathname.includes('cooperativa')) tipoEsperado = 'cooperativa';
     
-    // Se temos um tipo esperado, buscar a sessão mais recente desse tipo
     if (tipoEsperado) {
-        // Buscar todas as sessões do tipo e pegar a mais recente
         const sessions: Array<{token: string, lastAccess: number, userId: string}> = [];
         
         for (let i = 0; i < localStorage.length; i++) {
@@ -34,14 +29,12 @@ const getToken = (): string | null => {
             }
         }
         
-        // Ordenar por último acesso (mais recente primeiro) e retornar o token mais recente
         if (sessions.length > 0) {
             sessions.sort((a, b) => b.lastAccess - a.lastAccess);
             return sessions[0].token;
         }
     }
     
-    // Fallback: tentar token genérico (apenas se não encontrou por tipo)
     return localStorage.getItem('token');
 };
 

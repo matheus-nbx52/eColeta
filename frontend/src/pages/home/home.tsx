@@ -16,13 +16,10 @@ import { useAuth } from '../../contexts/AuthContext'
 export default function Home() {
     const { user, loading } = useAuth();
 
-    // Se houver usuário logado, redirecionar sem mostrar a home
-    // Mas só redirecionar se realmente houver um usuário válido
     if (!loading && user && user.tipo) {
         return <AuthRedirect />;
     }
 
-    // Se não houver usuário ou ainda estiver carregando, mostrar a home normalmente
     return (
         <div className="home-page">
             <Barra_de_navegacao />

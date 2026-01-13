@@ -4,7 +4,6 @@ import "./ColetasDisponiveis.css";
 function ColetasDisponiveis({ dados, onAceitar, onRecusar, bloquearBotao, carregando }: any) {
 
   const handleAceitar = (coleta: any) => {
-    // Permitir múltiplas coletas - remover restrição
     if (onAceitar) onAceitar(coleta);
   };
 

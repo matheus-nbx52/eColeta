@@ -35,7 +35,6 @@ const PerfilMorador: React.FC = () => {
             try {
                 setCarregando(true);
                 
-                // Buscar perfil do morador
                 const perfilResponse = await api.get('/morador/perfil');
                 const morador = perfilResponse.data.morador;
                 
@@ -44,7 +43,6 @@ const PerfilMorador: React.FC = () => {
                     return;
                 }
                 
-                // Formatar endereço se for objeto
                 let enderecoFormatado = '';
                 let cepFormatado = '';
                 
@@ -77,7 +75,6 @@ const PerfilMorador: React.FC = () => {
                     saldo: morador.saldo || 0
                 });
 
-                // Buscar coletas para calcular estatísticas
                 try {
                     const coletas = await coletasService.listarPorMorador();
                     
@@ -92,7 +89,6 @@ const PerfilMorador: React.FC = () => {
                         return acc + (c.peso_kg || 0);
                     }, 0);
 
-                    // Calcular conquistas
                     let conquistas = 0;
                     if (coletasValidadas.length > 0) conquistas++;
                     if (coletasValidadas.length >= 5) conquistas++;

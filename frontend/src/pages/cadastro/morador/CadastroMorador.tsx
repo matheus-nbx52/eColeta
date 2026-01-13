@@ -136,11 +136,9 @@ function CadastroMorador() {
         try {
             setCarregando(true);
 
-            // Cadastra o morador
             console.log("Cadastrando morador...", payload);
             await api.post('/auth/register/morador', payload);
 
-            // Faz login automático
             console.log("Realizando login automático...");
             const loginResponse = await api.post('/auth/login/morador', {
                 email: email.toLowerCase().trim(),

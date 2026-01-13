@@ -35,7 +35,6 @@ export default function DashboardContentMorador() {
                     acc.emColeta++;
                 } else if (coleta.status_coleta === 'Entregue_Coop' || coleta.status_coleta === 'Concluido' || coleta.status_coleta === 'VALIDADA' || coleta.status_coleta === 'Validada') {
                     acc.coletadas++;
-                    // Calcular kg a partir dos itens ou do peso validado
                     if (coleta.peso_kg) {
                         acc.totalKg += coleta.peso_kg;
                     } else if (coleta.itens) {
@@ -47,14 +46,12 @@ export default function DashboardContentMorador() {
                 return acc;
             }, { pendentes: 0, emColeta: 0, coletadas: 0, totalKg: 0 });
 
-            // Buscar saldo real do morador do perfil
             let pontos = 0;
             try {
                 const perfilResponse = await api.get('/morador/perfil');
                 pontos = perfilResponse.data.morador?.saldo || 0;
             } catch (error) {
                 console.error('Erro ao buscar saldo do morador:', error);
-                // Fallback: calcular pelos pontos gerados nas coletas validadas
                 pontos = coletas
                     .filter(c => c.pontos_gerados)
                     .reduce((acc, c) => acc + (c.pontos_gerados || 0), 0);
@@ -73,7 +70,6 @@ export default function DashboardContentMorador() {
 
     useEffect(() => {
         carregarEstatisticas();
-        // Atualizar a cada 60 segundos (mesmo padrão do coletor)
         const interval = setInterval(carregarEstatisticas, 60000);
         return () => clearInterval(interval);
     }, []);
@@ -133,7 +129,6 @@ export default function DashboardContentMorador() {
             </div>
 
             <div className="grade-cartoes-status">
-                {/* CARD PENDENTE */}
                 <div 
                     className={`cartao-status-individual pendente-click ${filtroAtivo === 'Pendente' ? 'ativo' : ''}`}
                     onClick={() => setFiltroAtivo('Pendente')}
@@ -145,7 +140,6 @@ export default function DashboardContentMorador() {
                     </div>
                 </div>
 
-                {/* CARD EM COLETA */}
                 <div 
                     className={`cartao-status-individual coleta-click ${filtroAtivo === 'Em Coleta' ? 'ativo' : ''}`}
                     onClick={() => setFiltroAtivo('Em Coleta')}
@@ -157,7 +151,6 @@ export default function DashboardContentMorador() {
                     </div>
                 </div>
 
-                {/* CARD COLETADO */}
                 <div 
                     className={`cartao-status-individual coletado-click ${filtroAtivo === 'Coletado' ? 'ativo' : ''}`}
                     onClick={() => setFiltroAtivo('Coletado')}

@@ -60,26 +60,21 @@ function DashboardColetor() {
   const carregarColetas = async () => {
     setLoading(true);
     try {
-      // Coletas disponíveis
       const disponiveis = await coletasService.obterColetasDisponiveis();
       
-      // Filtrar coletas recusadas (armazenadas no localStorage)
       const coletasRecusadas: string[] = JSON.parse(localStorage.getItem('coletas_recusadas') || '[]');
       const disponiveisFiltradas = disponiveis.filter((coleta: ColetaResponse) => {
         const coletaId = coleta.id_coleta?.toString() || String(coleta.id_coleta || '');
-        // Verificar se a coleta não está na lista de recusadas
         const isRecusada = coletasRecusadas.some(recusadaId => recusadaId === coletaId);
         return !isRecusada;
       });
       
       setListaDisponiveis(disponiveisFiltradas);
 
-      // Coletas em andamento (dashboard do coletor)
       const andamento = await coletasService.listarParaColetor();
       const coletasMapeadas = andamento.map(mapearColeta);
       setColetasAceitas(coletasMapeadas);
 
-      // Histórico de coletas finalizadas
       const historico = await coletasService.listarFinalizadasColetor();
       const historicoMapeado = historico.map(mapearColeta);
       setHistoricoFinalizadas(historicoMapeado);
@@ -93,23 +88,19 @@ function DashboardColetor() {
 
     useEffect(() => {
         carregarColetas();
-        // Aumentar intervalo para 60 segundos para evitar piscar na tela
         const interval = setInterval(carregarColetas, 60000);
         return () => clearInterval(interval);
     }, []);
 
   const handleRecusarColeta = (id: string) => {
-    // Garantir que o ID seja uma string
     const idString = id.toString();
     
-    // Adicionar à lista de coletas recusadas no localStorage
     const coletasRecusadas = JSON.parse(localStorage.getItem('coletas_recusadas') || '[]');
     if (!coletasRecusadas.includes(idString)) {
       coletasRecusadas.push(idString);
       localStorage.setItem('coletas_recusadas', JSON.stringify(coletasRecusadas));
     }
     
-    // Remover da lista local imediatamente (usar tanto id_coleta quanto id para garantir)
     setListaDisponiveis(prev => prev.filter(item => {
       const itemId = item.id_coleta?.toString() || item.id?.toString() || '';
       return itemId !== idString;
@@ -126,7 +117,6 @@ function DashboardColetor() {
 
   const handleFinalizarColeta = async (id: string) => {
     try {
-      // Primeiro entregar na cooperativa
       await coletasService.entregarNaCooperativa(parseInt(id));
       Swal.fire({
         title: 'Sucesso!',
@@ -210,7 +200,6 @@ function DashboardColetor() {
   const [coletaPendente, setColetaPendente] = useState<ColetaResponse | null>(null);
 
   const handleAbrirSelecao = (coleta: ColetaResponse) => {
-    // Permitir múltiplas coletas simultâneas - remover restrição
     setColetaPendente(coleta);
     setIsSelecaoOpen(true);
   };
@@ -219,14 +208,12 @@ function DashboardColetor() {
     if (!coletaPendente) return;
 
     try {
-      // Fechar modal imediatamente
       setIsSelecaoOpen(false);
       const coletaAceita = coletaPendente;
       setColetaPendente(null);
       
       await coletasService.aceitarColeta(coletaAceita.id_coleta, coopId);
       
-      // Mostrar mensagem de sucesso
       Swal.fire({
         title: 'Sucesso!',
         text: 'Coleta aceita com sucesso!',

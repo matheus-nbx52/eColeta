@@ -36,7 +36,6 @@ export default function ModalSolicitarColeta({ isOpen, onClose, onSuccess }: Mod
     try {
       setCarregando(true);
 
-      // Mapear nomes de materiais para os IDs do backend
       const mapaResiduo: { [key: string]: number } = {
         'Papel': 1,
         'Plástico': 2,
@@ -46,7 +45,6 @@ export default function ModalSolicitarColeta({ isOpen, onClose, onSuccess }: Mod
         'Óleo': 6
       };
 
-      // Combinar data e horário
       const dataHora = new Date(`${dataColeta}T${horario}:00`);
       const dataAgendada = dataHora.toISOString();
 
@@ -63,17 +61,14 @@ export default function ModalSolicitarColeta({ isOpen, onClose, onSuccess }: Mod
 
       await coletasService.criarColeta(payload);
 
-      // Limpar formulário
       setPeso('');
       setDataColeta('');
       setHorario('');
       setObservacoes('');
       setMateriaisSelecionados([]);
 
-      // Fechar modal imediatamente
       onClose();
 
-      // Mostrar mensagem de sucesso
       Swal.fire({
         title: 'Solicitação Enviada!',
         text: 'Obrigado por colaborar com o meio ambiente. Acompanhe o status no seu histórico.',

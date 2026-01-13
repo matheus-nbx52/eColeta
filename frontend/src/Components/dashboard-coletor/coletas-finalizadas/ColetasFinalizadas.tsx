@@ -24,7 +24,6 @@ function ColetasFinalizadas({ dados }: { dados: Coleta[] }) {
     <div className="lista-cards-stack">
       {dados.map((coleta) => (
         <div className="coleta-card card-finalizada-container" key={coleta.id}>
-          {/* Barra lateral verde */}
           <div className="accent-bar-green" />
           
           <div className="card-body">

@@ -18,7 +18,6 @@ export default function ProtectedRoute({ children, allowedTypes }: ProtectedRout
   }
 
   if (!allowedTypes.includes(user.tipo)) {
-    // Redirecionar para o dashboard correto baseado no tipo do usuário
     if (user.tipo === 'morador') {
       return <Navigate to="/dashboard-morador" replace />;
     } else if (user.tipo === 'ecoletor') {

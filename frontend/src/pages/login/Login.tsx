@@ -17,7 +17,6 @@ export default function Login() {
   const navigate = useNavigate();
   const { login, user, loading } = useAuth();
 
-  // Se já houver um usuário logado, redirecionar sem mostrar o login
   if (!loading && user) {
     return <AuthRedirect />;
   }
@@ -41,7 +40,6 @@ export default function Login() {
       if (token && user) {
           console.log("TOKEN ENCONTRADO! Salvando...");
           
-          // Normalizar dados do usuário para ter um ID genérico
           const normalizedUser = {
             ...user,
             id: user.id_morador?.toString() || 
@@ -51,10 +49,8 @@ export default function Login() {
                 ''
           };
           
-          // Fazer login (isso já limpa dados antigos)
           login(normalizedUser, token);
           
-          // Aguardar um pouco para garantir que o contexto foi atualizado
           setTimeout(() => {
             if (tipo === 'morador') navigate('/dashboard-morador');
             else if (tipo === 'ecoletor') navigate('/dashboard-coletor');

@@ -19,11 +19,9 @@ function PerfilColetor() {
       try {
         setCarregando(true);
         
-        // Buscar perfil do coletor
         const perfilResponse = await api.get('/ecoletor/perfil');
         const ecoletor = perfilResponse.data.ecoletor;
         
-        // Buscar coletas para calcular estatísticas
         const coletasAndamento = await coletasService.listarParaColetor();
         const coletasFinalizadas = await coletasService.listarFinalizadasColetor();
         
@@ -48,7 +46,6 @@ function PerfilColetor() {
         setUsuario(dadosReais);
       } catch (error) {
         console.error("Erro ao carregar perfil:", error);
-        // Em caso de erro, usar dados do authUser como fallback
         setUsuario({
           nome: authUser?.nome || "Coletor",
           cargo: "Coletor Profissional",

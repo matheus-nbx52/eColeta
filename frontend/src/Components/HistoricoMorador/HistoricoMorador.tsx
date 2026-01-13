@@ -27,7 +27,6 @@ const HistoricoMorador = ({ filtroStatus, onColetasChange, refreshTrigger }: Pro
           const materiais = coleta.itens?.map((item: any) => item.residuo?.nome || 'Material').join(', ') || 'Material';
           const quantidadeTotal = coleta.itens?.reduce((acc: number, item: any) => acc + (item.quantidade_estimada || 0), 0) || 0;
 
-          // Mapear status do backend para o formato do frontend
           let status: 'Pendente' | 'Em Coleta' | 'Coletado' = 'Pendente';
           if (coleta.status_coleta === 'Pendente') {
             status = 'Pendente';
@@ -50,7 +49,6 @@ const HistoricoMorador = ({ filtroStatus, onColetasChange, refreshTrigger }: Pro
           };
         });
 
-      // Armazenar todas as coletas (sem filtro)
       setTodasColetas(coletasMapeadas.reverse());
     } catch (error) {
       console.error('Erro ao carregar histórico:', error);
@@ -60,7 +58,6 @@ const HistoricoMorador = ({ filtroStatus, onColetasChange, refreshTrigger }: Pro
     }
   };
 
-  // Filtrar localmente baseado no filtroStatus (sem recarregar da API)
   const historico = filtroStatus 
     ? todasColetas.filter(c => c.status === filtroStatus)
     : todasColetas;
@@ -103,7 +100,6 @@ const HistoricoMorador = ({ filtroStatus, onColetasChange, refreshTrigger }: Pro
     }
   };
 
-  // Carregar dados na montagem e quando refreshTrigger mudar
   useEffect(() => {
     carregarDados();
   }, [refreshTrigger]);

@@ -155,11 +155,9 @@ const CadastroCooperativa: React.FC = () => {
     try {
       setCarregando(true);
 
-      // Cadastra a cooperativa
       console.log("Cadastrando cooperativa...", payload);
       await api.post('/auth/register/cooperativa', payload);
 
-      // Faz login automático
       console.log("Realizando login automático...");
       const loginResponse = await api.post('/auth/login/cooperativa', {
         email: email.toLowerCase().trim(),

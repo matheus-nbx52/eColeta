@@ -39,10 +39,8 @@ export default function DashBoardContentCooperativa() {
   const carregarDados = async () => {
     try {
       setLoading(true);
-      // Buscar coletas em andamento
       const coletasAndamento = await coletasService.listarParaCooperativa();
 
-      // Buscar histórico de coletas validadas
       const coletasHistorico = await coletasService.listarHistoricoCooperativa();
 
       const emAndamento: ItemColetaExtendida[] = [];
@@ -56,7 +54,6 @@ export default function DashBoardContentCooperativa() {
           ? `${coleta.morador.endereco.rua}, ${coleta.morador.endereco.numero} - ${coleta.morador.endereco.bairro}`
           : 'Endereço não informado';
 
-        // Determinar status para exibição
         let statusExibicao = 'Em Coleta';
         if (coleta.status_coleta === 'Entregue_Coop' || coleta.status_coleta === 'Concluido' || coleta.status_coleta === 'VALIDADA' || coleta.status_coleta === 'Validada') {
           statusExibicao = 'Coletado';
@@ -79,12 +76,10 @@ export default function DashBoardContentCooperativa() {
         };
       };
 
-      // Mapear coletas em andamento
       coletasAndamento.forEach((coleta: ColetaResponse) => {
         emAndamento.push(mapearColeta(coleta));
       });
 
-      // Mapear histórico
       coletasHistorico.forEach((coleta: ColetaResponse) => {
         historico.push(mapearColeta(coleta));
       });
@@ -102,7 +97,7 @@ export default function DashBoardContentCooperativa() {
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
     let intervalId: ReturnType<typeof setInterval> | null = null;
     let lastLoadTime = 0;
-    const MIN_TIME_BETWEEN_LOADS = 5000; // Mínimo de 5 segundos entre carregamentos
+    const MIN_TIME_BETWEEN_LOADS = 5000;
     let isMounted = true;
     
     const carregarComVerificacao = () => {
@@ -111,7 +106,6 @@ export default function DashBoardContentCooperativa() {
       const now = Date.now();
       const timeSinceLastLoad = now - lastLoadTime;
       
-      // Se passou menos de 5 segundos desde o último carregamento, aguardar
       if (timeSinceLastLoad < MIN_TIME_BETWEEN_LOADS) {
         if (timeoutId) {
           clearTimeout(timeoutId);
@@ -129,21 +123,17 @@ export default function DashBoardContentCooperativa() {
       carregarDados();
     };
     
-    // Carregar inicialmente
     carregarDados();
     lastLoadTime = Date.now();
     
-    // Intervalo de atualização a cada 60 segundos
     intervalId = setInterval(() => {
       if (isMounted) {
         carregarComVerificacao();
       }
     }, 60000);
     
-    // Recarregar dados quando a aba volta a ficar visível (com debounce)
     const handleVisibilityChange = () => {
       if (!document.hidden && isMounted) {
-        // Aguardar um pouco antes de recarregar para evitar múltiplos recarregamentos
         if (timeoutId) {
           clearTimeout(timeoutId);
         }
@@ -151,11 +141,10 @@ export default function DashBoardContentCooperativa() {
           if (isMounted) {
             carregarComVerificacao();
           }
-        }, 2000); // Aumentar para 2 segundos
+        }, 2000);
       }
     };
     
-    // Recarregar dados quando a janela recebe foco (com debounce)
     const handleFocus = () => {
       if (isMounted) {
         if (timeoutId) {
@@ -165,7 +154,7 @@ export default function DashBoardContentCooperativa() {
           if (isMounted) {
             carregarComVerificacao();
           }
-        }, 2000); // Aumentar para 2 segundos
+        }, 2000);
       }
     };
     
@@ -183,7 +172,7 @@ export default function DashBoardContentCooperativa() {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
     };
-  }, []); // Array vazio - executar apenas uma vez
+  }, []);
 
   const handleCancelarColeta = async (id: string) => {
     const result = await Swal.fire({
