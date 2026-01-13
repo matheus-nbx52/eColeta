@@ -4,7 +4,6 @@ import {
   Check, Scale, X, History, User, Truck, AlertTriangle,
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { api } from "../../services/api";
 import { coletasService } from "../../services/coletasService";
 import type { ColetaResponse } from "../../types/coleta";
 import Swal from "sweetalert2";
