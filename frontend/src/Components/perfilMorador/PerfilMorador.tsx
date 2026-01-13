@@ -1,13 +1,164 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Mail, Phone, CreditCard, User, MapPin, Package, TrendingUp,
     Trophy, Medal, ArrowLeft, Gift, Leaf, Globe, Target, Shield, Zap, Star, Award, 
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import { api } from '../../services/api';
+import { coletasService } from '../../services/coletasService';
+import type { ColetaResponse } from '../../types/coleta';
 import './PerfilMorador.css';
 
 const PerfilMorador: React.FC = () => {
     const navigate = useNavigate();
+    const { user: authUser } = useAuth();
+    const [carregando, setCarregando] = useState(true);
+    const [dadosPerfil, setDadosPerfil] = useState({
+        nome: '',
+        email: '',
+        telefone: '',
+        cpf: '',
+        cep: '',
+        endereco: '',
+        saldo: 0
+    });
+    const [stats, setStats] = useState({
+        coletasRealizadas: 0,
+        totalKg: 0,
+        pontos: 0,
+        conquistas: 0
+    });
+
+    useEffect(() => {
+        const carregarDados = async () => {
+            try {
+                setCarregando(true);
+                
+                // Buscar perfil do morador
+                const perfilResponse = await api.get('/morador/perfil');
+                const morador = perfilResponse.data.morador;
+                
+                if (!morador) {
+                    setCarregando(false);
+                    return;
+                }
+                
+                // Formatar endereço se for objeto
+                let enderecoFormatado = '';
+                let cepFormatado = '';
+                
+                if (morador.endereco) {
+                    if (typeof morador.endereco === 'object') {
+                        const end = morador.endereco as any;
+                        cepFormatado = end.cep || '';
+                        const partes = [
+                            end.rua,
+                            end.numero ? `, ${end.numero}` : '',
+                            end.complemento ? ` - ${end.complemento}` : '',
+                            end.bairro ? `, ${end.bairro}` : '',
+                            end.cidade ? `, ${end.cidade}` : '',
+                            end.estado ? ` - ${end.estado}` : ''
+                        ].filter(Boolean);
+                        enderecoFormatado = partes.join('');
+                    } else {
+                        enderecoFormatado = morador.endereco;
+                        cepFormatado = morador.cep || '';
+                    }
+                }
+                
+                setDadosPerfil({
+                    nome: morador.nome || '',
+                    email: morador.email || '',
+                    telefone: morador.telefone || '',
+                    cpf: morador.cpf || '',
+                    cep: cepFormatado,
+                    endereco: enderecoFormatado,
+                    saldo: morador.saldo || 0
+                });
+
+                // Buscar coletas para calcular estatísticas
+                try {
+                    const coletas = await coletasService.listarPorMorador();
+                    
+                    const coletasValidadas = coletas.filter((c: ColetaResponse) => 
+                        c.status_coleta === 'Entregue_Coop' || 
+                        c.status_coleta === 'Concluido' || 
+                        c.status_coleta === 'VALIDADA' || 
+                        c.status_coleta === 'Validada'
+                    );
+
+                    const totalKg = coletasValidadas.reduce((acc: number, c: ColetaResponse) => {
+                        return acc + (c.peso_kg || 0);
+                    }, 0);
+
+                    // Calcular conquistas
+                    let conquistas = 0;
+                    if (coletasValidadas.length > 0) conquistas++;
+                    if (coletasValidadas.length >= 5) conquistas++;
+                    if (totalKg >= 10) conquistas++;
+                    if (totalKg >= 50) conquistas++;
+                    if (totalKg >= 100) conquistas++;
+                    if (coletasValidadas.length >= 10) conquistas++;
+                    if (morador.saldo >= 1000) conquistas++;
+                    if (coletasValidadas.length >= 20) conquistas++;
+
+                    setStats({
+                        coletasRealizadas: coletasValidadas.length,
+                        totalKg: totalKg,
+                        pontos: morador.saldo || 0,
+                        conquistas: conquistas
+                    });
+                } catch (errorColetas) {
+                    console.error('Erro ao carregar coletas:', errorColetas);
+                    setStats({
+                        coletasRealizadas: 0,
+                        totalKg: 0,
+                        pontos: morador.saldo || 0,
+                        conquistas: 0
+                    });
+                }
+            } catch (error: any) {
+                console.error('Erro ao carregar dados do perfil:', error);
+                setDadosPerfil({
+                    nome: authUser?.nome || 'Morador',
+                    email: authUser?.email || '',
+                    telefone: authUser?.telefone || '',
+                    cpf: '',
+                    cep: '',
+                    endereco: '',
+                    saldo: 0
+                });
+                setStats({
+                    coletasRealizadas: 0,
+                    totalKg: 0,
+                    pontos: 0,
+                    conquistas: 0
+                });
+            } finally {
+                setCarregando(false);
+            }
+        };
+
+        if (authUser) {
+            carregarDados();
+        } else {
+            setCarregando(false);
+        }
+    }, [authUser]);
+
+    if (carregando) {
+        return (
+            <div className="perfil-app-container" style={{ minHeight: '100vh', width: '100%' }}>
+                <div style={{ textAlign: 'center', padding: '40px' }}>
+                    <p>Carregando perfil...</p>
+                </div>
+            </div>
+        );
+    }
+
+    const nomeExibicao = dadosPerfil.nome || authUser?.nome || 'Morador';
+    const dataAdesao = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
 
     return (
         <div className="perfil-app-container">
@@ -23,9 +174,9 @@ const PerfilMorador: React.FC = () => {
                             <User size={40} color="#3b82f6" />
                         </div>
                         <div className="usuario-texto">
-                            <h1>João Silva</h1>
+                            <h1>{nomeExibicao}</h1>
                             <p>Morador eColeta</p>
-                            <span>Membro desde Janeiro de 2024</span>
+                            <span>Membro desde {dataAdesao}</span>
                         </div>
                     </div>
                 </header>
@@ -33,22 +184,22 @@ const PerfilMorador: React.FC = () => {
                 <div className="stats-resumo-grid">
                     <div className="stat-item">
                         <div className="icon-circle icon-verde"><Package size={22} /></div>
-                        <strong>0</strong>
+                        <strong>{stats.coletasRealizadas}</strong>
                         <span>Coletas Realizadas</span>
                     </div>
                     <div className="stat-item">
                         <div className="icon-circle icon-azul"><TrendingUp size={22} /></div>
-                        <strong>0.0 kg</strong>
+                        <strong>{stats.totalKg.toFixed(1)} kg</strong>
                         <span>Reciclado</span>
                     </div>
                     <div className="stat-item">
                         <div className="icon-circle icon-laranja"><Trophy size={22} /></div>
-                        <strong>0</strong>
+                        <strong>{stats.pontos}</strong>
                         <span>Pontos</span>
                     </div>
                     <div className="stat-item">
                         <div className="icon-circle icon-roxo"><Medal size={22} /></div>
-                        <strong>0/8</strong>
+                        <strong>{stats.conquistas}/8</strong>
                         <span>Conquistas</span>
                     </div>
                 </div>
@@ -58,24 +209,24 @@ const PerfilMorador: React.FC = () => {
                     <div className="dados-pessoais-grid">
                         <div className="dado-bloco">
                             <label><Mail size={14} /> Email</label>
-                            <p>joao.silva@email.com</p>
+                            <p>{dadosPerfil.email || 'Não informado'}</p>
                         </div>
                         <div className="dado-bloco">
                             <label><Phone size={14} /> Telefone</label>
-                            <p>(11) 98765-4321</p>
+                            <p>{dadosPerfil.telefone || 'Não informado'}</p>
                         </div>
                         <div className="dado-bloco">
                             <label><CreditCard size={14} /> CPF</label>
-                            <p>123.456.789-00</p>
+                            <p>{dadosPerfil.cpf || 'Não informado'}</p>
                         </div>
                         <div className="dado-bloco">
                             <label><MapPin size={14} /> CEP</label>
-                            <p>01234-567</p>
+                            <p>{dadosPerfil.cep || 'Não informado'}</p>
                         </div>
                     </div>
                     <div className="endereco-destaque">
                         <label><MapPin size={14} /> Endereço Principal</label>
-                        <p>Rua das Flores, 123 - Jardim Paulista, São Paulo - SP</p>
+                        <p>{dadosPerfil.endereco || 'Não informado'}</p>
                     </div>
                 </section>
             </div>
@@ -89,8 +240,8 @@ const PerfilMorador: React.FC = () => {
                     </div>
                 </div>
                 <div className="pontos-valores-grid">
-                    <div className="valor-box"><span>Pontos Disponíveis</span><strong>0</strong></div>
-                    <div className="valor-box"><span>Pontos Ganhos</span><strong>0</strong></div>
+                    <div className="valor-box"><span>Pontos Disponíveis</span><strong>{stats.pontos}</strong></div>
+                    <div className="valor-box"><span>Pontos Ganhos</span><strong>{stats.pontos}</strong></div>
                     <div className="valor-box"><span>Pontos Resgatados</span><strong>0</strong></div>
                 </div>
                 <div className="historico-recente-area">
@@ -116,42 +267,42 @@ const PerfilMorador: React.FC = () => {
 
                 <div className="conquistas-grid">
                    
-                    <div className="conquista-item inativa">
+                    <div className={`conquista-item ${stats.coletasRealizadas > 0 ? 'ativa' : 'inativa'}`}>
                         <div className="conquista-icon"><Target color="#ec4899" size={20} /></div>
                         <div><h4>Primeira Coleta</h4><p>Realize sua primeira coleta</p></div>
                     </div>
                     
-                    <div className="conquista-item inativa">
+                    <div className={`conquista-item ${stats.totalKg >= 10 ? 'ativa' : 'inativa'}`}>
                         <div className="conquista-icon"><Leaf color="#84cc16" size={20} /></div>
                         <div><h4>Eco Iniciante</h4><p>Recicle 10kg de materiais</p></div>
                     </div>
                     
-                    <div className="conquista-item inativa">
+                    <div className={`conquista-item ${stats.coletasRealizadas >= 5 ? 'ativa' : 'inativa'}`}>
                         <div className="conquista-icon"><Trophy color="#cd7f32" size={20} /></div>
                         <div><h4>Reciclador Bronze</h4><p>Realize 5 coletas</p></div>
                     </div>
                  
-                    <div className="conquista-item inativa">
+                    <div className={`conquista-item ${stats.totalKg >= 50 ? 'ativa' : 'inativa'}`}>
                         <div className="conquista-icon"><Globe color="#3b82f6" size={20} /></div>
                         <div><h4>Guardião do Planeta</h4><p>Recicle 50kg de materiais</p></div>
                     </div>
                   
-                    <div className="conquista-item inativa">
+                    <div className={`conquista-item ${stats.coletasRealizadas >= 10 ? 'ativa' : 'inativa'}`}>
                         <div className="conquista-icon"><Zap color="#f59e0b" size={20} /></div>
-                        <div><h4>Super Eficiente</h4><p>3 coletas em uma semana</p></div>
+                        <div><h4>Super Eficiente</h4><p>10 coletas realizadas</p></div>
                     </div>
                     
-                    <div className="conquista-item inativa">
+                    <div className={`conquista-item ${stats.pontos >= 1000 ? 'ativa' : 'inativa'}`}>
                         <div className="conquista-icon"><Star color="#a855f7" size={20} /></div>
-                        <div><h4>Doador Master</h4><p>Doe 1000 pontos acumulados</p></div>
+                        <div><h4>Doador Master</h4><p>Acumule 1000 pontos</p></div>
                     </div>
                   
-                    <div className="conquista-item inativa">
+                    <div className={`conquista-item ${stats.coletasRealizadas >= 20 ? 'ativa' : 'inativa'}`}>
                         <div className="conquista-icon"><Shield color="#06b6d4" size={20} /></div>
-                        <div><h4>Eco Protetor</h4><p>Complete 1 mês de eColeta</p></div>
+                        <div><h4>Eco Protetor</h4><p>Complete 20 coletas</p></div>
                     </div>
                     
-                    <div className="conquista-item inativa">
+                    <div className={`conquista-item ${stats.totalKg >= 100 ? 'ativa' : 'inativa'}`}>
                         <div className="conquista-icon"><Award color="#ef4444" size={20} /></div>
                         <div><h4>Herói da Natureza</h4><p>Recicle 100kg no total</p></div>
                     </div>
@@ -160,12 +311,12 @@ const PerfilMorador: React.FC = () => {
                 <div className="progresso-geral-footer">
                     <div className="progresso-topo">
                         <span>Progresso Geral</span>
-                        <strong>0%</strong>
+                        <strong>{Math.round((stats.conquistas / 8) * 100)}%</strong>
                     </div>
                     <div className="barra-progresso-container">
-                        <div className="barra-preenchimento" style={{ width: '0%' }}></div>
+                        <div className="barra-preenchimento" style={{ width: `${(stats.conquistas / 8) * 100}%` }}></div>
                     </div>
-                    <span className="legenda-progresso">0 de 8 conquistas desbloqueadas</span>
+                    <span className="legenda-progresso">{stats.conquistas} de 8 conquistas desbloqueadas</span>
                 </div>
             </div>
         </div>

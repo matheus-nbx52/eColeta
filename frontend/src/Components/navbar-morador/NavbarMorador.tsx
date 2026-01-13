@@ -63,7 +63,10 @@ export default function NavbarMorador() {
                     </li>
 
                     <li className="nav-item-botao">
-                        <BotaoSair onSair={() => { logout(); navigate("/"); }} />
+                        <BotaoSair onSair={() => { 
+                            logout(); 
+                            navigate("/login");
+                        }} />
                     </li>
                 </ul>
             </nav>

@@ -8,12 +8,12 @@ export default function NavbarCooperativa() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
-  // Garantir que o nome seja exibido corretamente
-  const nomeCooperativa = user?.nome ? user.nome.split(' ')[0] : "Cooperativa";
+  // Exibir o nome completo da cooperativa
+  const nomeCooperativa = user?.nome || "Cooperativa";
 
   const handleSair = () => {
     logout();
-    navigate("/");
+    navigate("/login");
   };
 
   return (

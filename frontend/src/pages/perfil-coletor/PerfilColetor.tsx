@@ -1,10 +1,15 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react"; 
+import { useAuth } from "../../contexts/AuthContext";
+import { api } from "../../services/api";
+import { coletasService } from "../../services/coletasService";
+import type { ColetaResponse } from "../../types/coleta";
 import "./PerfilColetor.css";
 import {  User,  Mail, Phone, IdCard, MapPin, Package, TrendingUp } from "lucide-react";
 
 function PerfilColetor() {
   const navigate = useNavigate();
+  const { user: authUser } = useAuth();
 
   const [usuario, setUsuario] = useState<any>(null);
   const [carregando, setCarregando] = useState(true);
@@ -13,30 +18,55 @@ function PerfilColetor() {
     const buscarDadosPerfil = async () => {
       try {
         setCarregando(true);
-        const dadosSimulados = {
-          nome: "Carlos Santos",
+        
+        // Buscar perfil do coletor
+        const perfilResponse = await api.get('/ecoletor/perfil');
+        const ecoletor = perfilResponse.data.ecoletor;
+        
+        // Buscar coletas para calcular estatísticas
+        const coletasAndamento = await coletasService.listarParaColetor();
+        const coletasFinalizadas = await coletasService.listarFinalizadasColetor();
+        
+        const todasColetas = [...coletasAndamento, ...coletasFinalizadas];
+        
+        const pesoTotal = todasColetas.reduce((acc: number, coleta: ColetaResponse) => {
+          return acc + (coleta.peso_kg || 0);
+        }, 0);
+
+        const dadosReais = {
+          nome: ecoletor.nome || "Coletor",
           cargo: "Coletor Profissional",
-          dataAdesao: "Janeiro 2026",
-          coletasRealizadas: 15,
-          pesoTotal: 125.5,
-          email: "carlos.santos@email.com",
-          telefone: "(11) 98765-4321",
-          cpf: "123.456.789-00",
-          localizacao: "São Paulo, SP"
+          dataAdesao: new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
+          coletasRealizadas: todasColetas.length,
+          pesoTotal: pesoTotal,
+          email: ecoletor.email || "Não informado",
+          telefone: ecoletor.telefone || "Não informado",
+          cpf: ecoletor.cpf || "Não informado",
+          localizacao: ecoletor.localizacao || "Não informado"
         };
 
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        setUsuario(dadosSimulados);
+        setUsuario(dadosReais);
       } catch (error) {
         console.error("Erro ao carregar perfil:", error);
+        // Em caso de erro, usar dados do authUser como fallback
+        setUsuario({
+          nome: authUser?.nome || "Coletor",
+          cargo: "Coletor Profissional",
+          dataAdesao: new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
+          coletasRealizadas: 0,
+          pesoTotal: 0,
+          email: authUser?.email || "Não informado",
+          telefone: authUser?.telefone || "Não informado",
+          cpf: "Não informado",
+          localizacao: "Não informado"
+        });
       } finally {
         setCarregando(false);
       }
     };
 
     buscarDadosPerfil();
-  }, []);
+  }, [authUser]);
 
   if (carregando) return <div className="perfil-page">Carregando perfil...</div>;
   if (!usuario) return <div className="perfil-page">Erro ao carregar dados.</div>;

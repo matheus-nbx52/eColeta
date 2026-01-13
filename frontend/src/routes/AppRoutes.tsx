@@ -16,13 +16,11 @@ import PerfilMorador from "../Components/perfilMorador/PerfilMorador"
 import PoliticaPrivacidade from "../pages/termosPolitica/PoliticaPrivacidade"
 import TermosUso from "../pages/termosPolitica/TermosUso"
 import ProtectedRoute from "../Components/ProtectedRoute"
-import AuthRouteListener from "../Components/AuthRouteListener"
 
 function AppRoutes() {
     return (
         <AuthProvider>
             <BrowserRouter>
-                <AuthRouteListener />
                 <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/saibaMais" element={<SaibaMais/>} />

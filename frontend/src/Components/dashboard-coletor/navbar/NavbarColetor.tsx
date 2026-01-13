@@ -14,7 +14,7 @@ function NavbarColetor() {
 
   const handleSair = () => {
     logout();
-    navigate("/");
+    navigate("/login");
   };
   
   return (

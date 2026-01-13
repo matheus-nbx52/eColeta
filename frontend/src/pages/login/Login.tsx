@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
+import AuthRedirect from '../../Components/AuthRedirect';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -14,7 +15,12 @@ export default function Login() {
   const [erro, setErro] = useState('');
 
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, user, loading } = useAuth();
+
+  // Se já houver um usuário logado, redirecionar sem mostrar o login
+  if (!loading && user) {
+    return <AuthRedirect />;
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

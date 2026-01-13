@@ -31,7 +31,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  
+
   // Função auxiliar para determinar o tipo de usuário baseado na rota
   const getTipoFromPath = (pathname: string): 'morador' | 'ecoletor' | 'cooperativa' | null => {
     if (pathname.includes('morador')) return 'morador';
@@ -170,13 +170,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       }
 
-      if (storedToken && storedUser) {
-        try {
+    if (storedToken && storedUser) {
+      try {
           const parsedUser = typeof storedUser === 'string' ? JSON.parse(storedUser) : storedUser;
-          setToken(storedToken);
-          setUser(parsedUser);
-        } catch (error) {
-          console.error('Erro ao restaurar usuário do localStorage:', error);
+        setToken(storedToken);
+        setUser(parsedUser);
+      } catch (error) {
+        console.error('Erro ao restaurar usuário do localStorage:', error);
           setToken(null);
           setUser(null);
         }
@@ -237,7 +237,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               // porque elas não devem ser atualizadas quando há múltiplos usuários do mesmo tipo
               if (currentUser.tipo === tipoEsperado) {
                 return; // SEMPRE ignorar mudanças nas chaves genéricas se já temos um usuário válido
-              }
+      }
             } catch (error) {
               // Se houver erro ao parsear, continuar normalmente
             }
@@ -322,7 +322,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     
     if (shouldUpdateGeneric) {
       localStorage.setItem('token', userToken);
-      localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('user', JSON.stringify(userData));
     }
   };
 
