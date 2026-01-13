@@ -9,6 +9,8 @@
   border-radius: 20px;
   padding: 24px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+  min-height: 200px; /* Evitar que o componente "pule" ao carregar */
+  transition: opacity 0.3s ease-in-out;
 }
 
 .titulo-secao {
@@ -35,6 +37,21 @@
   gap: 16px;
 }
 
+.animar-entrada {
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .coleta-card {
   display: flex;
   background: white;
@@ -42,6 +59,8 @@
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
   border: 1px solid #f1f5f9;
+  transition: all 0.4s ease-in-out;
+  opacity: 1;
 }
 
 

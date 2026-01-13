@@ -4,10 +4,7 @@ import "./ColetasDisponiveis.css";
 function ColetasDisponiveis({ dados, onAceitar, onRecusar, bloquearBotao, carregando }: any) {
 
   const handleAceitar = (coleta: any) => {
-    if (bloquearBotao) {
-      alert("Você já possui uma coleta em andamento! Finalize-a antes de aceitar outra.");
-      return;
-    }
+    // Permitir múltiplas coletas - remover restrição
     if (onAceitar) onAceitar(coleta);
   };
 
@@ -91,7 +88,7 @@ function ColetasDisponiveis({ dados, onAceitar, onRecusar, bloquearBotao, carreg
                   </button>
                   <button
                     className="btn-recusar"
-                    onClick={() => onRecusar && onRecusar(coleta.id_coleta)}
+                    onClick={() => onRecusar && onRecusar(coleta.id_coleta.toString())}
                     disabled={carregando}
                   >
                     <X size={20} /> Recusar

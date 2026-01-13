@@ -62,7 +62,17 @@ function DashboardColetor() {
     try {
       // Coletas disponíveis
       const disponiveis = await coletasService.obterColetasDisponiveis();
-      setListaDisponiveis(disponiveis);
+      
+      // Filtrar coletas recusadas (armazenadas no localStorage)
+      const coletasRecusadas: string[] = JSON.parse(localStorage.getItem('coletas_recusadas') || '[]');
+      const disponiveisFiltradas = disponiveis.filter((coleta: ColetaResponse) => {
+        const coletaId = coleta.id_coleta?.toString() || String(coleta.id_coleta || '');
+        // Verificar se a coleta não está na lista de recusadas
+        const isRecusada = coletasRecusadas.some(recusadaId => recusadaId === coletaId);
+        return !isRecusada;
+      });
+      
+      setListaDisponiveis(disponiveisFiltradas);
 
       // Coletas em andamento (dashboard do coletor)
       const andamento = await coletasService.listarParaColetor();
@@ -89,20 +99,29 @@ function DashboardColetor() {
     }, []);
 
   const handleRecusarColeta = (id: string) => {
-    // Remove da lista local com feedback visual
-    const coletaRemovida = listaDisponiveis.find(item => item.id_coleta.toString() === id);
+    // Garantir que o ID seja uma string
+    const idString = id.toString();
     
-    if (coletaRemovida) {
-      Swal.fire({
-        title: 'Coleta removida',
-        text: 'A coleta foi removida da sua lista de disponíveis.',
-        icon: 'info',
-        timer: 2000,
-        showConfirmButton: false
-      });
-      
-      setListaDisponiveis(prev => prev.filter(item => item.id_coleta.toString() !== id));
+    // Adicionar à lista de coletas recusadas no localStorage
+    const coletasRecusadas = JSON.parse(localStorage.getItem('coletas_recusadas') || '[]');
+    if (!coletasRecusadas.includes(idString)) {
+      coletasRecusadas.push(idString);
+      localStorage.setItem('coletas_recusadas', JSON.stringify(coletasRecusadas));
     }
+    
+    // Remover da lista local imediatamente (usar tanto id_coleta quanto id para garantir)
+    setListaDisponiveis(prev => prev.filter(item => {
+      const itemId = item.id_coleta?.toString() || item.id?.toString() || '';
+      return itemId !== idString;
+    }));
+    
+    Swal.fire({
+      title: 'Coleta recusada',
+      text: 'A coleta foi removida da sua lista de disponíveis.',
+      icon: 'success',
+      timer: 2000,
+      showConfirmButton: false
+    });
   };
 
   const handleFinalizarColeta = async (id: string) => {
@@ -152,29 +171,46 @@ function DashboardColetor() {
     }
   };
 
-  const handleCancelarColeta = (id: string) => {
-    Swal.fire({
-      title: 'Atenção!',
-      text: 'Cancelar coletas não é permitido. Entre em contato com o suporte se necessário.',
+  const handleCancelarColeta = async (id: string) => {
+    const result = await Swal.fire({
+      title: 'Cancelar Coleta',
+      text: 'Deseja realmente cancelar este agendamento? Esta ação não pode ser desfeita.',
       icon: 'warning',
-      confirmButtonText: 'OK'
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sim, cancelar',
+      cancelButtonText: 'Não'
     });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await coletasService.cancelarColetaColetor(parseInt(id));
+      
+      Swal.fire({
+        title: 'Cancelada!',
+        text: 'A coleta foi cancelada com sucesso.',
+        icon: 'success',
+        confirmButtonText: 'OK'
+      }).then(() => {
+        carregarColetas();
+      });
+    } catch (error: any) {
+      Swal.fire({
+        title: 'Erro!',
+        text: error.response?.data?.message || 'Não foi possível cancelar a coleta.',
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+    }
   };
 
   const [isSelecaoOpen, setIsSelecaoOpen] = useState(false);
   const [coletaPendente, setColetaPendente] = useState<ColetaResponse | null>(null);
 
   const handleAbrirSelecao = (coleta: ColetaResponse) => {
-    // Verificar se já tem coleta em andamento
-    if (coletasAceitas.length > 0) {
-      Swal.fire({
-        title: 'Atenção!',
-        text: 'Você já possui uma coleta em andamento! Finalize-a antes de aceitar outra.',
-        icon: 'warning',
-        confirmButtonText: 'OK'
-      });
-      return;
-    }
+    // Permitir múltiplas coletas simultâneas - remover restrição
     setColetaPendente(coleta);
     setIsSelecaoOpen(true);
   };
@@ -240,7 +276,7 @@ function DashboardColetor() {
                   dados={listaDisponiveis}
                   onAceitar={handleAbrirSelecao} 
                   onRecusar={handleRecusarColeta}
-                  bloquearBotao={coletasAceitas.length > 0}
+                  bloquearBotao={false}
                   carregando={loading}
                 />
               </div>
@@ -260,10 +296,6 @@ function DashboardColetor() {
                         status_coleta={item.status_coleta}
                         onFinalizar={() => handleFinalizarColeta(item.id)}
                         onCancelar={() => handleCancelarColeta(item.id)}
-                        onVerDetalhes={() => {
-                          setColetaParaModal(item);
-                          setMostrarModal(true);
-                        }}
                       />
                     ))}
                   </div>

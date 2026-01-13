@@ -68,6 +68,21 @@ export const coletasService = {
   async cancelarColeta(idColeta: number) {
     const response = await api.patch(`/coleta/${idColeta}/cancelar`);
     return response.data;
+  },
+
+  async recusarColeta(idColeta: number) {
+    const response = await api.post(`/coleta/${idColeta}/recusar`);
+    return response.data;
+  },
+
+  async cancelarColetaColetor(idColeta: number) {
+    const response = await api.patch(`/coleta/${idColeta}/cancelar-coletor`);
+    return response.data;
+  },
+
+  async cancelarColetaCooperativa(idColeta: number) {
+    const response = await api.patch(`/coleta/${idColeta}/cancelar-cooperativa`);
+    return response.data;
   }
 };
 
