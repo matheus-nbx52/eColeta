@@ -92,18 +92,58 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (tipoEsperado) {
         const sessions = getActiveSessions(tipoEsperado);
         if (sessions.length > 0) {
-          // Carregar a sessão mais recente (primeira do array ordenado)
-          const latestSession = sessions[0];
+          // Verificar se há um usuário salvo no sessionStorage desta aba
+          // Isso garante que cada aba mantenha seu próprio usuário mesmo após reload
+          const sessionStorageKey = `activeUser_${tipoEsperado}`;
+          const savedUserId = sessionStorage.getItem(sessionStorageKey);
+          
+          let sessionToLoad = sessions[0]; // Por padrão, usar a mais recente
+          
+          // Se há um usuário salvo no sessionStorage, tentar carregá-lo
+          if (savedUserId) {
+            const savedUserSession = sessions.find(s => s.userId === savedUserId);
+            if (savedUserSession) {
+              sessionToLoad = savedUserSession;
+            }
+          } else {
+            // Se não há usuário salvo, verificar se há um usuário atual nas chaves genéricas
+            const currentGenericUser = localStorage.getItem('user');
+            if (currentGenericUser) {
+              try {
+                const parsedUser = JSON.parse(currentGenericUser);
+                if (parsedUser.tipo === tipoEsperado) {
+                  const currentUserId = getUserId(parsedUser);
+                  // Tentar encontrar a sessão do usuário atual
+                  const currentUserSession = sessions.find(s => s.userId === currentUserId);
+                  if (currentUserSession) {
+                    sessionToLoad = currentUserSession;
+                    // Salvar no sessionStorage para próximos reloads
+                    sessionStorage.setItem(sessionStorageKey, currentUserId);
+                  }
+                }
+              } catch (error) {
+                // Se houver erro ao parsear, usar a sessão mais recente
+              }
+            }
+          }
           
           try {
-            setToken(latestSession.token);
-            setUser(latestSession.user);
+            setToken(sessionToLoad.token);
+            setUser(sessionToLoad.user);
+            // Salvar o ID do usuário no sessionStorage para manter após reload
+            sessionStorage.setItem(sessionStorageKey, sessionToLoad.userId);
             // Atualizar timestamp de último acesso
-            const lastAccessKey = `lastAccess_${tipoEsperado}_${latestSession.userId}`;
+            const lastAccessKey = `lastAccess_${tipoEsperado}_${sessionToLoad.userId}`;
             localStorage.setItem(lastAccessKey, Date.now().toString());
-            // Atualizar chaves genéricas para compatibilidade
-            localStorage.setItem('token', latestSession.token);
-            localStorage.setItem('user', JSON.stringify(latestSession.user));
+            // Atualizar chaves genéricas apenas se necessário
+            const currentGenericUser = localStorage.getItem('user');
+            const shouldUpdateGeneric = !currentGenericUser || 
+              (currentGenericUser && JSON.parse(currentGenericUser).tipo !== tipoEsperado) ||
+              (currentGenericUser && getUserId(JSON.parse(currentGenericUser)) === sessionToLoad.userId);
+            if (shouldUpdateGeneric) {
+              localStorage.setItem('token', sessionToLoad.token);
+              localStorage.setItem('user', JSON.stringify(sessionToLoad.user));
+            }
             setLoading(false);
             return;
           } catch (error) {
@@ -158,6 +198,53 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return;
       }
       
+      // Verificar o tipo esperado pela rota atual
+      const tipoEsperado = getTipoFromPath(window.location.pathname);
+      
+      // Se temos um tipo esperado, verificar se a mudança é de outro usuário do mesmo tipo
+      if (tipoEsperado) {
+        // Se a mudança foi em uma chave específica de outro usuário do mesmo tipo, ignorar
+        if (e.key?.startsWith('token_') || e.key?.startsWith('user_')) {
+          if (e.key.includes(`_${tipoEsperado}_`)) {
+            // Verificar qual usuário está atualmente carregado nesta aba
+            const currentUserStr = localStorage.getItem('user');
+            if (currentUserStr) {
+              try {
+                const currentUser = JSON.parse(currentUserStr);
+                if (currentUser.tipo === tipoEsperado) {
+                  const currentUserId = getUserId(currentUser);
+                  // Se a mudança foi em uma chave de outro usuário do mesmo tipo, ignorar
+                  if (!e.key.includes(`_${tipoEsperado}_${currentUserId}`)) {
+                    return; // Ignorar mudanças de outros usuários do mesmo tipo
+                  }
+                }
+              } catch (error) {
+                // Se houver erro ao parsear, continuar normalmente
+              }
+            }
+          }
+        }
+        
+        // Se a mudança foi nas chaves genéricas, SEMPRE ignorar se já temos um usuário válido
+        // porque as chaves genéricas não devem ser atualizadas quando há múltiplos usuários do mesmo tipo
+        if (e.key === 'token' || e.key === 'user') {
+          // Verificar qual usuário está atualmente carregado nesta aba
+          const currentUserStr = localStorage.getItem('user');
+          if (currentUserStr) {
+            try {
+              const currentUser = JSON.parse(currentUserStr);
+              // Se já temos um usuário do tipo esperado, SEMPRE ignorar mudanças nas chaves genéricas
+              // porque elas não devem ser atualizadas quando há múltiplos usuários do mesmo tipo
+              if (currentUser.tipo === tipoEsperado) {
+                return; // SEMPRE ignorar mudanças nas chaves genéricas se já temos um usuário válido
+              }
+            } catch (error) {
+              // Se houver erro ao parsear, continuar normalmente
+            }
+          }
+        }
+      }
+      
       // Limpar timeout anterior
       if (timeoutId) {
         clearTimeout(timeoutId);
@@ -205,42 +292,110 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.setItem(userKey, JSON.stringify(userData));
     localStorage.setItem(lastAccessKey, Date.now().toString());
     
-    // Também salvar nas chaves genéricas para compatibilidade
-    localStorage.setItem('token', userToken);
-    localStorage.setItem('user', JSON.stringify(userData));
+    // Salvar o ID do usuário no sessionStorage para manter após reload
+    const sessionStorageKey = `activeUser_${tipo}`;
+    sessionStorage.setItem(sessionStorageKey, userId);
+    
+    // NUNCA atualizar chaves genéricas se já houver outro usuário do mesmo tipo logado
+    // Isso evita que outras abas sejam afetadas quando um novo usuário do mesmo tipo faz login
+    const currentGenericUser = localStorage.getItem('user');
+    let shouldUpdateGeneric = false; // Por padrão, NÃO atualizar
+    
+    if (!currentGenericUser) {
+      // Se não há usuário genérico, atualizar (primeira vez)
+      shouldUpdateGeneric = true;
+    } else {
+      try {
+        const parsedUser = JSON.parse(currentGenericUser);
+        // Só atualizar se:
+        // 1. O usuário genérico é de um tipo diferente
+        // 2. O usuário genérico é o mesmo usuário (mesmo ID)
+        if (parsedUser.tipo !== tipo || parsedUser.id === userData.id) {
+          shouldUpdateGeneric = true;
+        }
+        // Se há outro usuário do mesmo tipo mas ID diferente, NÃO atualizar
+      } catch (error) {
+        // Se houver erro ao parsear, atualizar de qualquer forma
+        shouldUpdateGeneric = true;
+      }
+    }
+    
+    if (shouldUpdateGeneric) {
+      localStorage.setItem('token', userToken);
+      localStorage.setItem('user', JSON.stringify(userData));
+    }
   };
 
   const loadUserByType = useCallback((tipo: 'morador' | 'ecoletor' | 'cooperativa') => {
-    // Buscar todas as sessões ativas do tipo e carregar a mais recente
+    // Buscar todas as sessões ativas do tipo
     const sessions = getActiveSessions(tipo);
     
     if (sessions.length > 0) {
-      const latestSession = sessions[0];
+      // Verificar se há um usuário salvo no sessionStorage desta aba
+      const sessionStorageKey = `activeUser_${tipo}`;
+      const savedUserId = sessionStorage.getItem(sessionStorageKey);
+      
+      let sessionToLoad = sessions[0]; // Por padrão, usar a mais recente
+      
+      // Se há um usuário salvo no sessionStorage, tentar carregá-lo
+      if (savedUserId) {
+        const savedUserSession = sessions.find(s => s.userId === savedUserId);
+        if (savedUserSession) {
+          sessionToLoad = savedUserSession;
+        }
+      } else {
+        // Se não há usuário salvo, verificar se há um usuário atual nas chaves genéricas
+        const currentGenericUser = localStorage.getItem('user');
+        if (currentGenericUser) {
+          try {
+            const parsedUser = JSON.parse(currentGenericUser);
+            if (parsedUser.tipo === tipo) {
+              const currentUserId = getUserId(parsedUser);
+              // Tentar encontrar a sessão do usuário atual
+              const currentUserSession = sessions.find(s => s.userId === currentUserId);
+              if (currentUserSession) {
+                sessionToLoad = currentUserSession;
+                // Salvar no sessionStorage para próximos reloads
+                sessionStorage.setItem(sessionStorageKey, currentUserId);
+              }
+            }
+          } catch (error) {
+            // Se houver erro ao parsear, usar a sessão mais recente
+          }
+        }
+      }
       
       // Verificar se já está carregado o mesmo usuário (evitar atualizações desnecessárias)
-      // Usar uma verificação mais segura sem depender diretamente do estado
       const currentToken = token;
       const currentUser = user;
       
       if (currentUser && currentUser.tipo === tipo) {
         const currentUserId = getUserId(currentUser);
-        if (currentUserId === latestSession.userId && currentToken === latestSession.token) {
+        if (currentUserId === sessionToLoad.userId && currentToken === sessionToLoad.token) {
           // Já está carregado, apenas atualizar timestamp silenciosamente
-          const lastAccessKey = `lastAccess_${tipo}_${latestSession.userId}`;
+          const lastAccessKey = `lastAccess_${tipo}_${sessionToLoad.userId}`;
           localStorage.setItem(lastAccessKey, Date.now().toString());
           return;
         }
       }
       
       try {
-        setToken(latestSession.token);
-        setUser(latestSession.user);
+        setToken(sessionToLoad.token);
+        setUser(sessionToLoad.user);
+        // Salvar o ID do usuário no sessionStorage para manter após reload
+        sessionStorage.setItem(sessionStorageKey, sessionToLoad.userId);
         // Atualizar timestamp de último acesso
-        const lastAccessKey = `lastAccess_${tipo}_${latestSession.userId}`;
+        const lastAccessKey = `lastAccess_${tipo}_${sessionToLoad.userId}`;
         localStorage.setItem(lastAccessKey, Date.now().toString());
-        // Atualizar também as chaves genéricas
-        localStorage.setItem('token', latestSession.token);
-        localStorage.setItem('user', JSON.stringify(latestSession.user));
+        // Atualizar chaves genéricas apenas se necessário
+        const currentGenericUser = localStorage.getItem('user');
+        const shouldUpdateGeneric = !currentGenericUser || 
+          (currentGenericUser && JSON.parse(currentGenericUser).tipo !== tipo) ||
+          (currentGenericUser && getUserId(JSON.parse(currentGenericUser)) === sessionToLoad.userId);
+        if (shouldUpdateGeneric) {
+          localStorage.setItem('token', sessionToLoad.token);
+          localStorage.setItem('user', JSON.stringify(sessionToLoad.user));
+        }
       } catch (error) {
         console.error('Erro ao carregar usuário por tipo:', error);
       }
@@ -264,6 +419,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.removeItem(`token_${tipoAtual}_${userIdAtual}`);
       localStorage.removeItem(`user_${tipoAtual}_${userIdAtual}`);
       localStorage.removeItem(`lastAccess_${tipoAtual}_${userIdAtual}`);
+    }
+    
+    // Limpar sessionStorage desta aba
+    if (tipoAtual) {
+      sessionStorage.removeItem(`activeUser_${tipoAtual}`);
     }
     
     // Limpar dados antigos do sistema antigo (se existirem)
