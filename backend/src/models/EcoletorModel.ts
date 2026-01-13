@@ -16,7 +16,7 @@ export class EcoletorModel {
     @Column({ length: 100, nullable: false })
     nome!: string;
 
-    @Column({ length: 100, nullable: false})
+    @Column({ length: 100, unique: true, nullable: false})
     email!: string;
 
     @Column({ length: 255, nullable: false })
